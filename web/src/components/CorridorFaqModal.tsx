@@ -182,10 +182,10 @@ export const CorridorFaqModal: React.FC<CorridorFaqModalProps> = ({ isOpen, onCl
                 </p>
                 <div className="pt-2 border-t border-blue-200/60 dark:border-blue-900/40 flex flex-wrap items-center gap-3">
                   <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                    Created by Abhinav Prakash:
+                    Created by PraLabs:
                   </span>
                   <a
-                    href="https://github.com/AbhiPra24"
+                    href="https://github.com/pra-labs"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 font-semibold text-blue-600 hover:underline dark:text-blue-400"
@@ -193,20 +193,12 @@ export const CorridorFaqModal: React.FC<CorridorFaqModalProps> = ({ isOpen, onCl
                     GitHub ↗
                   </a>
                   <a
-                    href="https://www.linkedin.com/in/abhipra24/"
+                    href="https://www.linkedin.com/company/pra-labs"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 font-semibold text-[#0A66C2] hover:underline"
                   >
                     LinkedIn ↗
-                  </a>
-                  <a
-                    href="https://www.instagram.com/abhipra_"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 font-semibold text-[#E4405F] hover:underline"
-                  >
-                    Instagram ↗
                   </a>
                 </div>
               </div>

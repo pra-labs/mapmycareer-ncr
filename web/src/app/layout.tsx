@@ -109,20 +109,17 @@ const jsonLd = {
       url: 'https://www.mapmycareer.online',
       logo: 'https://www.mapmycareer.online/icon.svg',
       founder: {
-        '@type': 'Person',
-        name: 'Abhinav Prakash',
-        jobTitle: 'Founder & Software Engineer',
-        url: 'https://www.linkedin.com/in/abhipra24/',
+        '@type': 'Organization',
+        name: 'PraLabs',
+        url: 'https://www.linkedin.com/company/pra-labs',
         sameAs: [
-          'https://www.linkedin.com/in/abhipra24/',
-          'https://github.com/AbhiPra24',
-          'https://www.instagram.com/abhipra_',
+          'https://www.linkedin.com/company/pra-labs',
+          'https://github.com/pra-labs',
         ],
       },
       sameAs: [
-        'https://github.com/AbhiPra24/mapmycareer-ncr',
-        'https://www.linkedin.com/in/abhipra24/',
-        'https://www.instagram.com/abhipra_',
+        'https://github.com/pra-labs',
+        'https://www.linkedin.com/company/pra-labs',
       ],
       publishingPrinciples: 'https://www.mapmycareer.online/#methodology',
       knowsAbout: [
