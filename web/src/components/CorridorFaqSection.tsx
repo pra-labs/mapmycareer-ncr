@@ -159,9 +159,9 @@ export const CorridorFaqSection: React.FC = () => {
                   Every position on MapMyCareer is verified against <strong>10,500+ active company career portals</strong>, matched to sub-meter <strong>exact coordinate geocoding</strong>, and indexed against levels.fyi and verified peer benchmarks. We filter ghost job postings and refresh recruitment statuses daily to guarantee candidate trust and data freshness.
                 </p>
                 <div className="pt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  Curated & engineered by <strong className="text-zinc-800 dark:text-zinc-200">Abhinav Prakash</strong> ·{' '}
+                  Curated & engineered by <strong className="text-zinc-800 dark:text-zinc-200">PraLabs</strong> ·{' '}
                   <a
-                    href="https://github.com/AbhiPra24"
+                    href="https://github.com/pra-labs"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium text-blue-600 hover:underline dark:text-blue-400"
@@ -170,21 +170,12 @@ export const CorridorFaqSection: React.FC = () => {
                   </a>{' '}
                   ·{' '}
                   <a
-                    href="https://www.linkedin.com/in/abhipra24/"
+                    href="https://www.linkedin.com/company/pra-labs"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-medium text-blue-600 hover:underline dark:text-blue-400"
                   >
                     LinkedIn
-                  </a>{' '}
-                  ·{' '}
-                  <a
-                    href="https://www.instagram.com/abhipra_"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-blue-600 hover:underline dark:text-blue-400"
-                  >
-                    Instagram
                   </a>
                 </div>
               </div>

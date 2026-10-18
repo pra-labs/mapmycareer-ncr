@@ -77,8 +77,13 @@ ASHBY_COMPANIES = [{"slug": c, "name": get_canonical_company_name(c), "domain": 
     "elevenlabs", "pika", "runway", "tavily", "synthesia"
 ]]
 
-def fetch_json(url: str) -> Optional[Any]:
+from utils.robots_check import is_url_crawl_allowed
+
+def fetch_json(url: str, check_robots: bool = True) -> Optional[Any]:
     try:
+        if check_robots and not is_url_crawl_allowed(url):
+            print(f"Skipping {url}: Disallowed by robots.txt")
+            return None
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=10) as response:
             return json.loads(response.read().decode('utf-8'))
