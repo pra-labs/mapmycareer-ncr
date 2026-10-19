@@ -77,7 +77,15 @@ ASHBY_COMPANIES = [{"slug": c, "name": get_canonical_company_name(c), "domain": 
     "elevenlabs", "pika", "runway", "tavily", "synthesia"
 ]]
 
-from utils.robots_check import is_url_crawl_allowed
+try:
+    from utils.robots_check import is_url_crawl_allowed
+except ImportError:
+    try:
+        from robots_check import is_url_crawl_allowed
+    except ImportError:
+        import sys
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        from robots_check import is_url_crawl_allowed
 
 def fetch_json(url: str, check_robots: bool = True) -> Optional[Any]:
     try:

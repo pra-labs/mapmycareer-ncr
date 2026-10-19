@@ -20,10 +20,10 @@ describe('Deterministic Keyword & Skill Matcher (TS)', () => {
   });
 
   it('extracts n-grams and filters pure stopwords', () => {
-    const tokens = ['looking', 'for', 'senior', 'react', 'developer'];
+    const tokens = ['looking', 'for', 'a', 'senior', 'react', 'developer'];
     const ngrams = extractAllNgrams(tokens, 3, true);
     expect(ngrams[2]).toContain('react developer');
-    expect(ngrams[2]).not.toContain('for senior');
+    expect(ngrams[2]).not.toContain('for a');
   });
 
   it('matches tech skills against taxonomy accurately', () => {
