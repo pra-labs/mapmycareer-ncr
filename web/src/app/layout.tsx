@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: '%s | MapMyCareer',
   },
   description:
-    'Explore 10,500+ verified tech jobs across Bengaluru, Delhi NCR, Hyderabad, Pune, Mumbai, Kochi, Chandigarh & Kolkata with exact campus coordinates, metro commute insights, and verified salary ranges.',
+    'Explore 25,000+ verified tech jobs across Bengaluru, Delhi NCR, Hyderabad, Pune, Mumbai, Kochi, Chandigarh & Kolkata with exact campus coordinates, metro commute insights, and verified salary ranges.',
   keywords: [
     'India Tech Jobs',
     'Bengaluru Software Engineer Jobs',
@@ -39,6 +39,7 @@ export const metadata: Metadata = {
     'Tech Jobs Commute Radar',
     'Tech Salaries India 2026',
     'Verified Engineering Jobs India',
+    '25000 Tech Jobs India',
   ],
   authors: [{ name: 'Abhinav Prakash', url: 'https://www.linkedin.com/in/abhinav-prakash-dev/' }, { name: 'MapMyCareer' }],
   creator: 'Abhinav Prakash',
@@ -61,7 +62,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'MapMyCareer · Geo-Spatial Tech Job Discovery & Radar',
     description:
-      'Explore 10,500+ verified tech jobs across Bengaluru, Delhi NCR, Hyderabad, Pune, Mumbai, Kochi, Chandigarh & Kolkata mapped to exact office campuses with commute and salary benchmarks.',
+      'Explore 25,000+ verified tech jobs across Bengaluru, Delhi NCR, Hyderabad, Pune, Mumbai, Kochi, Chandigarh & Kolkata mapped to exact office campuses with commute and salary benchmarks.',
     url: 'https://www.mapmycareer.online',
     siteName: 'MapMyCareer',
     locale: 'en_IN',
@@ -79,7 +80,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'MapMyCareer · Geo-Spatial Tech Job Discovery & Radar',
     description:
-      'Explore 10,500+ verified tech jobs mapped to exact office campuses across Bengaluru, Delhi NCR, Hyderabad, Pune & Mumbai.',
+      'Explore 25,000+ verified tech jobs mapped to exact office campuses across Bengaluru, Delhi NCR, Hyderabad, Pune & Mumbai.',
     images: ['/api/og?title=Geo-Spatial%20Tech%20Job%20Radar&company=India%20Tech%20Hubs&city=Delhi%20NCR%20%7C%20Bengaluru%20%7C%20Hyderabad&hub=DLF%20Cyber%20City%20%7C%20Outer%20Ring%20Road&salary=%E2%82%B925L%20-%20%E2%82%B960L'],
   },
   verification: {
@@ -129,7 +130,27 @@ const jsonLd = {
         'Direct ATS Career Portal Verification',
       ],
       description:
-        'MapMyCareer is a developer-first career intelligence platform indexing 10,500+ verified tech roles with exact campus geolocations, commute radar, and real-time ATS verification.',
+        'MapMyCareer is a developer-first career intelligence platform indexing 25,000+ verified tech roles with exact campus geolocations, commute radar, and real-time ATS verification.',
+    },
+    {
+      '@type': 'Dataset',
+      '@id': 'https://www.mapmycareer.online/#dataset',
+      name: 'MapMyCareer Verified India Tech Job Dataset',
+      description:
+        'Geospatial database indexing 25,000+ verified engineering, product, and data openings mapped to tech parks and transit hubs across India.',
+      license: 'https://creativecommons.org/licenses/by-nc/4.0/',
+      spatialCoverage: 'India (Bengaluru, Delhi NCR, Hyderabad, Pune, Mumbai, Chennai, Kochi, Kolkata, Ahmedabad, Chandigarh)',
+      temporalCoverage: '2026/..',
+      variableMeasured: [
+        'Job Title',
+        'Company Name',
+        'Tech Park / Campus',
+        'Latitude',
+        'Longitude',
+        'Salary Range',
+        'Experience Level',
+        'Workplace Type',
+      ],
     },
     {
       '@type': 'WebApplication',
@@ -148,7 +169,7 @@ const jsonLd = {
         'Interactive Leaflet Pin Clusters',
         'Hiring Density Heatmaps',
         'Campus & Tech Park Coordinates',
-        '10,500+ Verified Live Tech Openings Across Indian Tech Hubs',
+        '25,000+ Verified Live Tech Openings Across Indian Tech Hubs',
         'Inline Filtering by Stack, Experience, and Work Model',
         'Metro Line & Commute Radius Integration',
       ],
@@ -188,7 +209,7 @@ const jsonLd = {
       '@id': 'https://www.mapmycareer.online/#job-openings',
       name: 'Verified Tech Openings in India',
       description: 'Directory of verified software engineering, platform, data, and ML openings mapped across India tech corridors.',
-      numberOfItems: 10500,
+      numberOfItems: 25000,
       itemListElement: [
         {
           '@type': 'ListItem',
