@@ -279,6 +279,16 @@ def main():
             built = build_job({"name": j.get("companyName", "Startup"), "domain": "jobicy.com"}, j.get("jobTitle", ""), j.get("url", ""), "Remote", True, "jobicy", now_iso)
             if built:
                 jobs.append(built)
+
+    # Optional Free Public Feeds (RemoteOK / freehire)
+    try:
+        from utils.free_feed_ingestor import fetch_free_feeds
+        free_jobs = fetch_free_feeds()
+        if free_jobs:
+            jobs.extend(free_jobs)
+            print(f"Fetched {len(free_jobs)} curated tech jobs from free public feeds.")
+    except Exception as e:
+        print(f"Free feed ingestion skipped or encountered notice: {e}")
             
     # Load and clean existing
     existing = []

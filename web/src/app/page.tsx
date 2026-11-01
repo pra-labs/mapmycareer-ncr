@@ -16,6 +16,7 @@ import { ResumeMatcherModal } from '../components/ResumeMatcherModal';
 import { AnnouncementBanner } from '../components/AnnouncementBanner';
 import { CorridorFaqSection } from '../components/CorridorFaqSection';
 import { CorridorFaqModal } from '../components/CorridorFaqModal';
+import { DevProfileAuditorModal } from '../components/DevProfileAuditorModal';
 import { Loader2, AlertCircle, List, Map as MapIcon, Target, Sparkles, X } from 'lucide-react';
 
 export default function Home() {
@@ -53,6 +54,7 @@ export default function Home() {
   const [isAtsModalOpen, setIsAtsModalOpen] = useState<boolean>(false);
   const [isResumeBuilderOpen, setIsResumeBuilderOpen] = useState<boolean>(false);
   const [isRecruiterModalOpen, setIsRecruiterModalOpen] = useState<boolean>(false);
+  const [isDevProfileAuditorOpen, setIsDevProfileAuditorOpen] = useState<boolean>(false);
   const [isFaqModalOpen, setIsFaqModalOpen] = useState<boolean>(false);
   const [isResumeMatcherOpen, setIsResumeMatcherOpen] = useState<boolean>(false);
   const [activeResumeProfile, setActiveResumeProfile] = useState<CandidateProfile | null>(null);
@@ -263,6 +265,9 @@ export default function Home() {
         onOpenRecruiterValidator={() => {
           setActiveJobContext(null);
           setIsRecruiterModalOpen(true);
+        }}
+        onOpenDevProfileAuditor={() => {
+          setIsDevProfileAuditorOpen(true);
         }}
         onScrollToInsights={handleScrollToInsights}
         onOpenFaqModal={() => setIsFaqModalOpen(true)}
@@ -525,6 +530,12 @@ export default function Home() {
         isOpen={isRecruiterModalOpen}
         onClose={() => setIsRecruiterModalOpen(false)}
         initialJobContext={activeJobContext}
+      />
+
+      {/* CareerForge Dev Profile Auditor & Indian Notice Period Engine Modal */}
+      <DevProfileAuditorModal
+        isOpen={isDevProfileAuditorOpen}
+        onClose={() => setIsDevProfileAuditorOpen(false)}
       />
 
       {/* Corridor Insights & Tech Career FAQ Modal */}
