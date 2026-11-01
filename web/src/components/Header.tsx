@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Layers, FileCode2, Zap, MailCheck, BookOpen, Target } from 'lucide-react';
+import { Compass, Layers, FileCode2, Zap, MailCheck, BookOpen, Target, Award } from 'lucide-react';
 
 interface HeaderProps {
   totalJobs: number;
@@ -9,6 +9,7 @@ interface HeaderProps {
   onOpenAtsAuditor?: () => void;
   onOpenResumeBuilder?: () => void;
   onOpenRecruiterValidator?: () => void;
+  onOpenDevProfileAuditor?: () => void;
   onScrollToInsights?: () => void;
   onOpenFaqModal?: () => void;
 }
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAtsAuditor,
   onOpenResumeBuilder,
   onOpenRecruiterValidator,
+  onOpenDevProfileAuditor,
   onScrollToInsights,
   onOpenFaqModal,
 }) => {
@@ -146,6 +148,19 @@ export const Header: React.FC<HeaderProps> = ({
                   <div>
                     <div className="font-semibold">Recruiter Radar</div>
                     <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Anti-bounce email validator</div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    onOpenDevProfileAuditor?.();
+                    setIsToolsOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-indigo-800 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/40 text-left transition"
+                >
+                  <Award className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                  <div>
+                    <div className="font-semibold">Dev Profile & Proof of Work</div>
+                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400">GitHub auditor & notice calculator</div>
                   </div>
                 </button>
               </div>

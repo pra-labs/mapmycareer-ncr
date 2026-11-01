@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Job, JobMatchResult } from '../types/job';
 import {
   X,
@@ -14,7 +14,18 @@ import {
   Bookmark,
   Target,
   AlertCircle,
+  CloudSun,
+  Navigation,
+  Train,
+  Car,
+  Wind,
 } from 'lucide-react';
+import { fetchWeatherAndAqi, WeatherAqiData } from '../lib/weatherService';
+import {
+  POPULAR_INDIAN_TRANSIT_HUBS,
+  estimateCommute,
+  CommuteEstimate,
+} from '../lib/commuteService';
 
 interface JobDetailsModalProps {
   job: Job | null;
@@ -37,7 +48,17 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
   onGenerateResume,
   onVerifyRecruiter,
 }) => {
-  React.useEffect(() => {
+  // Live Weather & AQI State
+  const [weatherData, setWeatherData] = useState<WeatherAqiData | null>(null);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+
+  // Commute Estimator State
+  const [selectedTransitHubId, setSelectedTransitHubId] = useState<string>('');
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; name: string } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [commuteEstimate, setCommuteEstimate] = useState<CommuteEstimate | null>(null);
+
+  useEffect(() => {
     if (!job) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -47,6 +68,88 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [job, onClose]);
+
+  // Load weather when job changes
+  useEffect(() => {
+    if (!job?.lat || !job?.lon) {
+      setWeatherData(null);
+      return;
+    }
+    let isCancelled = false;
+    setIsLoadingWeather(true);
+    fetchWeatherAndAqi(job.lat, job.lon)
+      .then((data) => {
+        if (!isCancelled) {
+          setWeatherData(data);
+          setIsLoadingWeather(false);
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) setIsLoadingWeather(false);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [job?.lat, job?.lon]);
+
+  // Update commute estimate when selection or user location changes
+  useEffect(() => {
+    if (!job?.lat || !job?.lon) {
+      setCommuteEstimate(null);
+      return;
+    }
+
+    let originLat: number | null = null;
+    let originLon: number | null = null;
+
+    if (userLocation) {
+      originLat = userLocation.lat;
+      originLon = userLocation.lon;
+    } else if (selectedTransitHubId) {
+      const landmark = POPULAR_INDIAN_TRANSIT_HUBS.find((h) => h.id === selectedTransitHubId);
+      if (landmark) {
+        originLat = landmark.lat;
+        originLon = landmark.lon;
+      }
+    }
+
+    if (originLat !== null && originLon !== null) {
+      const est = estimateCommute(originLat, originLon, job.lat, job.lon);
+      setCommuteEstimate(est);
+    } else {
+      setCommuteEstimate(null);
+    }
+  }, [job?.lat, job?.lon, userLocation, selectedTransitHubId]);
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsLocating(false);
+        setSelectedTransitHubId('');
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          name: 'Your Current GPS Location',
+        });
+      },
+      (err) => {
+        setIsLocating(false);
+        alert(`Could not fetch location: ${err.message}`);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
+
+  const handleTransitHubChange = (hubId: string) => {
+    setSelectedTransitHubId(hubId);
+    setUserLocation(null);
+  };
 
   if (!job) return null;
 
@@ -120,6 +223,122 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
             <CheckCircle2 className="h-4 w-4 text-purple-500" />
             <span>{job.experience_yoe || job.experience_level}</span>
           </div>
+        </div>
+
+        {/* 🌤️ Live Weather & AQI Corridor Intelligence (Open-Meteo Free Keyless API) */}
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-zinc-200/80 bg-gradient-to-r from-sky-50/60 to-blue-50/40 p-2.5 dark:border-zinc-800 dark:from-sky-950/20 dark:to-blue-950/20">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+              <CloudSun className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                  {weatherData ? `${weatherData.temperature}°C` : isLoadingWeather ? 'Updating...' : '--°C'}
+                </span>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                  · {weatherData?.weatherCondition || 'Corridor Weather'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-zinc-500">
+                <Wind className="h-3 w-3 text-zinc-400" />
+                <span>Wind {weatherData?.windSpeed ?? '--'} km/h</span>
+                <span>· Humidity {weatherData?.relativeHumidity ?? '--'}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-end">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-semibold text-zinc-500">AQI</span>
+              <span
+                className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                  !weatherData
+                    ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                    : weatherData.aqiCategory === 'Good' || weatherData.aqiCategory === 'Fair'
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                    : weatherData.aqiCategory === 'Moderate'
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                    : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                }`}
+              >
+                {weatherData ? `${weatherData.aqi} (${weatherData.aqiCategory})` : 'Live AQI'}
+              </span>
+            </div>
+            <span className="text-[9px] text-zinc-400">PM2.5: {weatherData?.pm25 ?? '--'} µg/m³</span>
+          </div>
+        </div>
+
+        {/* 🚗 Indian Commute & Distance Estimator */}
+        <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 dark:border-zinc-800 dark:bg-zinc-800/40">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Navigation className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                Commute Distance & Travel Time
+              </span>
+            </div>
+            <button
+              onClick={handleUseMyLocation}
+              disabled={isLocating}
+              className="flex items-center gap-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+            >
+              <Navigation className="h-3 w-3 text-blue-500" />
+              <span>{isLocating ? 'Locating...' : 'Use My GPS'}</span>
+            </button>
+          </div>
+
+          <div className="mt-2.5">
+            <select
+              value={userLocation ? 'custom' : selectedTransitHubId}
+              onChange={(e) => {
+                if (e.target.value !== 'custom') {
+                  handleTransitHubChange(e.target.value);
+                }
+              }}
+              className="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-800 outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+            >
+              {userLocation && (
+                <option value="custom">📍 {userLocation.name}</option>
+              )}
+              <option value="">-- Choose Indian Metro / Tech Landmark --</option>
+              {POPULAR_INDIAN_TRANSIT_HUBS.map((hub) => (
+                <option key={hub.id} value={hub.id}>
+                  {hub.name} ({hub.city})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {commuteEstimate && (
+            <div className="mt-3 grid grid-cols-3 gap-2 border-t border-zinc-200/80 pt-2.5 dark:border-zinc-700">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-semibold text-zinc-500">Distance</span>
+                <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                  {commuteEstimate.roadDistanceKm} km
+                  <span className="text-[10px] font-normal text-zinc-400"> (road)</span>
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-zinc-500">
+                  <Car className="h-3 w-3 text-amber-500" />
+                  Peak Drive
+                </span>
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                  ~{commuteEstimate.drivePeakMinutes} mins
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-zinc-500">
+                  <Train className="h-3 w-3 text-blue-500" />
+                  Metro Transit
+                </span>
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                  ~{commuteEstimate.metroTransitMinutes} mins
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Resume Match Alignment Radar */}

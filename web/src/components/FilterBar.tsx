@@ -1,6 +1,7 @@
 import React from 'react';
 import { FilterState } from '../types/job';
-import { Search, SlidersHorizontal, IndianRupee, RotateCcw } from 'lucide-react';
+import { Search, SlidersHorizontal, IndianRupee, RotateCcw, MapPin, Loader2, X } from 'lucide-react';
+import { lookupPincode, PincodeInfo } from '../lib/pincodeService';
 
 interface FilterBarProps {
   filters: FilterState;
@@ -20,9 +21,53 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const [localSearch, setLocalSearch] = React.useState(filters.searchQuery);
   const [isMobileExpanded, setIsMobileExpanded] = React.useState(false);
 
+  // PIN Code Auto-Search & Geocoding State
+  const [detectedPinInfo, setDetectedPinInfo] = React.useState<PincodeInfo | null>(null);
+  const [isLookingUpPin, setIsLookingUpPin] = React.useState(false);
+
   React.useEffect(() => {
     setLocalSearch(filters.searchQuery);
   }, [filters.searchQuery]);
+
+  // Check if input has a 6-digit Indian PIN code
+  React.useEffect(() => {
+    const pinMatch = localSearch.match(/\b([1-9][0-9]{5})\b/);
+    if (pinMatch) {
+      const pin = pinMatch[1];
+      let active = true;
+      setIsLookingUpPin(true);
+      lookupPincode(pin)
+        .then((info) => {
+          if (!active) return;
+          setIsLookingUpPin(false);
+          if (info) {
+            setDetectedPinInfo(info);
+            // If the matched city is one of our cities, automatically filter to it
+            if (info.matchedCity) {
+              const matchedCityInList = cities.find(
+                (c) => c.toLowerCase() === info.matchedCity!.toLowerCase()
+              );
+              if (matchedCityInList && filters.selectedCity !== matchedCityInList) {
+                onFilterChange({
+                  ...filters,
+                  selectedCity: matchedCityInList,
+                  searchQuery: localSearch,
+                });
+              }
+            }
+          }
+        })
+        .catch(() => {
+          if (active) setIsLookingUpPin(false);
+        });
+
+      return () => {
+        active = false;
+      };
+    } else {
+      setDetectedPinInfo(null);
+    }
+  }, [localSearch, cities, filters, onFilterChange]);
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -144,6 +189,33 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
         </div>
       </div>
+
+      {/* 📍 Detected Indian Postal PIN Code Badge */}
+      {(detectedPinInfo || isLookingUpPin) && (
+        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50/80 px-3 py-1.5 text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+            {isLookingUpPin ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Resolving PIN code details...
+              </span>
+            ) : (
+              <span>
+                📍 <strong>{detectedPinInfo?.postOfficeName}</strong> ({detectedPinInfo?.district}, {detectedPinInfo?.state}) — Auto-mapped to{' '}
+                <span className="font-bold underline">{detectedPinInfo?.matchedCity || detectedPinInfo?.district}</span>
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => setDetectedPinInfo(null)}
+            className="rounded p-0.5 text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900/50"
+            title="Dismiss PIN badge"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Filter Badges & Sliders Row */}
       <div className={`flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 pt-2.5 dark:border-zinc-800/60 ${
