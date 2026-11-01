@@ -101,7 +101,7 @@ export default async function CorridorJobsPage({ params }: CorridorPageProps) {
 
   const jobs = getJobsForCorridor(config);
 
-  // Structured ItemList and FAQPage Schemas
+  // Structured ItemList, Place, and FAQPage Schemas
   const structuredCorridorSchema = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -127,6 +127,25 @@ export default async function CorridorJobsPage({ params }: CorridorPageProps) {
             item: `https://www.mapmycareer.online/jobs/${city}/${corridor}`,
           },
         ],
+      },
+      {
+        '@type': 'Place',
+        '@id': `https://www.mapmycareer.online/jobs/${city}/${corridor}#place`,
+        name: config.displayName,
+        description: config.description,
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: config.streetAddress || `${config.displayName} Tech Corridor`,
+          addressLocality: config.cityDisplayName,
+          addressRegion: config.addressRegion || config.cityDisplayName,
+          postalCode: config.postalCode || '110001',
+          addressCountry: 'IN',
+        },
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: config.lat,
+          longitude: config.lon,
+        },
       },
       {
         '@type': 'FAQPage',
@@ -297,6 +316,78 @@ export default async function CorridorJobsPage({ params }: CorridorPageProps) {
                     <li key={idx}>• {tower}</li>
                   ))}
                 </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Semantic Corridor Intelligence Summary & SSR HTML Table */}
+          <div className="mt-6 border-t border-zinc-100 pt-5 dark:border-zinc-800">
+            {/* BLUF Statement for Search / AI Engines */}
+            <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/40 dark:bg-blue-950/30">
+              <p className="text-xs font-semibold leading-relaxed text-blue-950 dark:text-blue-200">
+                <strong className="font-bold">Bottom Line Up Front (BLUF):</strong> {config.displayName} is a key technology corridor in {config.cityDisplayName} ({config.addressRegion || 'India'}) anchored around {config.lat.toFixed(4)}°N, {config.lon.toFixed(4)}°E. It hosts {jobs.length}+ verified software engineering and technical roles across major hubs like {config.primaryTowers.slice(0, 3).join(', ')}, commanding benchmark compensation of {config.avgSalaryRange} with direct connectivity via {config.metroLines[0] || 'arterial transit'}.
+              </p>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="border-b border-zinc-100 bg-zinc-50/80 px-4 py-2.5 dark:border-zinc-800 dark:bg-zinc-800/50">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                  {config.displayName} Corridor Key Statistics
+                </h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    <tr>
+                      <th scope="row" className="whitespace-nowrap px-4 py-2.5 font-semibold text-zinc-600 dark:text-zinc-400">
+                        Metro / City Hub
+                      </th>
+                      <td className="px-4 py-2.5 text-zinc-900 dark:text-zinc-100">
+                        {config.cityDisplayName} ({config.addressRegion || 'India'})
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="whitespace-nowrap px-4 py-2.5 font-semibold text-zinc-600 dark:text-zinc-400">
+                        Geographic Coordinates
+                      </th>
+                      <td className="px-4 py-2.5 text-zinc-900 dark:text-zinc-100">
+                        {config.lat.toFixed(4)}° N, {config.lon.toFixed(4)}° E (Postal Code: {config.postalCode || 'N/A'})
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="whitespace-nowrap px-4 py-2.5 font-semibold text-zinc-600 dark:text-zinc-400">
+                        Benchmark Tech Compensation
+                      </th>
+                      <td className="px-4 py-2.5 font-bold text-emerald-600 dark:text-emerald-400">
+                        {config.avgSalaryRange} (Fresher: ₹8-16L | Senior/Staff: ₹45-85L+)
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="whitespace-nowrap px-4 py-2.5 font-semibold text-zinc-600 dark:text-zinc-400">
+                        Transit & Metro Connections
+                      </th>
+                      <td className="px-4 py-2.5 text-zinc-900 dark:text-zinc-100">
+                        {config.metroLines.join(' • ')}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="whitespace-nowrap px-4 py-2.5 font-semibold text-zinc-600 dark:text-zinc-400">
+                        Prominent Tech Towers & Parks
+                      </th>
+                      <td className="px-4 py-2.5 text-zinc-900 dark:text-zinc-100">
+                        {config.primaryTowers.join(', ')}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row" className="whitespace-nowrap px-4 py-2.5 font-semibold text-zinc-600 dark:text-zinc-400">
+                        Verified Active Openings
+                      </th>
+                      <td className="px-4 py-2.5 font-bold text-blue-600 dark:text-blue-400">
+                        {jobs.length} direct ATS postings indexed
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

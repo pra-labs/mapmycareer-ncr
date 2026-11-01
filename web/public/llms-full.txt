@@ -1,0 +1,232 @@
+# MapMyCareer — Comprehensive Platform Specification & LLM Reference
+
+> MapMyCareer (https://www.mapmycareer.online) is an open geospatial tech job discovery radar and market intelligence index mapping 25,000+ verified engineering roles across India's premier technology corridors directly to physical tech park coordinates and metro transit corridors.
+
+---
+
+## 1. Executive Overview & Problem Statement
+
+Traditional job platforms (LinkedIn, Naukri, Indeed) suffer from severe information degradation:
+- **Commute Blindness**: Listings label positions simply as "Bengaluru" or "Delhi NCR", obscuring the fact that commuting between Whitefield and Electronic City, or Noida Sector 62 and Gurugram Cyber City, can exceed 2.5 to 3 hours daily.
+- **Ghost Listings & Aggregator Scraping**: Up to 40% of listings on secondary boards are stale reposts, third-party recruiter fishing expeditions, or closed positions.
+- **Opaque Salary Bands**: Compensation is frequently hidden, misleading, or stated without context relative to local cost of living and tech park tiers.
+
+MapMyCareer solves these issues through a strictly validated, geo-indexed architecture mapping direct ATS links to exact physical office campuses and rapid transit lines.
+
+---
+
+## 2. Direct ATS Ingestion Engine & Verification Methodology
+
+### 2.1 Direct Ingestion Pipeline
+- **Sources**: Automated, high-frequency synchronization with tier-1 employer Applicant Tracking Systems (ATS), specifically:
+  - Greenhouse (`boards-api.greenhouse.io`)
+  - Lever (`api.lever.co`)
+  - Ashby (`jobs.ashbyhq.com`)
+  - Workday & SmartRecruiters direct corporate career endpoints
+- **Zero Intermediaries**: Every job listed links directly to the verified employer application form (`apply_url`), eliminating third-party recruiter middle-tier redirects.
+
+### 2.2 Data Validation & Hygiene
+- **Health Checks & Ghost Job Pruning**: A scheduled health check (`/api/cron/health-check`) validates schema integrity and checks job URLs. Postings that return HTTP 404, redirects to general career roots, or closed statuses are excised from the active index within 24 hours.
+- **Deduplication Engine**: Content fingerprints (normalized company name, title semantic vector, physical campus location) prevent cross-posting duplicates.
+
+### 2.3 Geospatial Geocoding & Tech Park Centroids
+- Every role's textual location is matched against a curated database of 300+ Indian IT parks, Special Economic Zones (SEZs), and commercial business towers.
+- Positions without precise office park designations are pinned to the verified tech corridor centroid or regional hub coordinates.
+
+### 2.4 Standardization of Career Levels
+Job titles and experience criteria are mapped to a 5-tier canonical schema:
+1. **Entry / Junior** (0-2 YOE): Level Index 0
+2. **Mid-Level** (2-5 YOE): Level Index 1
+3. **Senior** (5-8 YOE): Level Index 2
+4. **Lead / Principal / Staff** (8-12+ YOE): Level Index 3
+5. **Engineering Director / Executive** (12+ YOE): Level Index 3
+
+---
+
+## 3. Comprehensive Tech Corridor Directory
+
+Below is the verified registry of India's major tech corridors indexed in MapMyCareer (`web/src/lib/corridors.ts`), complete with coordinates, transit lines, campus towers, and compensation benchmarks.
+
+### 3.1 DLF Cyber City & Cyber Hub
+- **Slug**: `dlf-cyber-city`
+- **City**: Gurugram (`gurugram`)
+- **Coordinates**: Latitude `28.494389`, Longitude `77.090163`
+- **Postal Code / Address**: `122002`, DLF Cyber City, Phase 2 & 3, Haryana
+- **Metro Transit**: Rapid Metro (Cyber City & Moulsari Ave Stations), Delhi Metro Yellow Line (Sikanderpur Interchange)
+- **Primary Tech Towers & Campuses**: Building 8A/8B/8C, Building 10A/10B/10C, Building 14, Infinity Towers, Cyber Hub SEZ
+- **Overview**: Premier Northern India corporate tech corridor hosting enterprise SaaS, Big Tech engineering centers (Microsoft IDC, Google, American Express), and consumer tech unicorns (Zomato, Blinkit).
+- **Salary Benchmarks**:
+  - SDE-1 (0-2 yrs): ₹10L - ₹18L CTC
+  - SDE-2 (2-5 yrs): ₹22L - ₹42L CTC
+  - Staff / Lead / Principal (5-10+ yrs): ₹45L - ₹85L+ CTC
+  - Overall Corridor Band: ₹14L - ₹48L
+
+### 3.2 Outer Ring Road (ORR) Tech Corridor
+- **Slug**: `outer-ring-road`
+- **City**: Bengaluru (`bengaluru`)
+- **Coordinates**: Latitude `12.935200`, Longitude `77.694600`
+- **Postal Code / Address**: `560103`, Outer Ring Road, Bellandur / Marathahalli, Karnataka
+- **Metro Transit**: Upcoming Namma Metro Blue Line (ORR-Airport Corridor), Direct BMTC Vajra AC Bus Feeder Grid
+- **Primary Tech Towers & Campuses**: Prestige Tech Park, Ecospace Business Park, Cessna Business Park, Embassy TechVillage, Bagmane Constellation
+- **Overview**: India's highest-density software corridor housing tier-1 Global Capability Centers (GCCs), semiconductor design centers, and consumer tech giants (Flipkart, Amazon, Goldman Sachs, Cisco, Wells Fargo).
+- **Salary Benchmarks**:
+  - SDE-1 (0-2 yrs): ₹12L - ₹20L CTC
+  - SDE-2 (2-5 yrs): ₹26L - ₹48L CTC
+  - Staff / Lead / Principal (5-10+ yrs): ₹55L - ₹95L+ CTC
+  - Overall Corridor Band: ₹18L - ₹65L
+
+### 3.3 Whitefield IT Park Corridor
+- **Slug**: `whitefield`
+- **City**: Bengaluru (`bengaluru`)
+- **Coordinates**: Latitude `12.985000`, Longitude `77.731500`
+- **Postal Code / Address**: `560066`, ITPB Road, Whitefield, Karnataka
+- **Metro Transit**: Namma Metro Purple Line (Whitefield Kadugodi & Hopefarm Channasandra Stations)
+- **Primary Tech Towers & Campuses**: International Tech Park Bangalore (ITPB), Sigma Tech Park, Brigade Tech Park, EPIP Zone, Divyasree TechnoPark
+- **Overview**: Heritage tech corridor with extensive international software campuses and seamless Purple Line metro connection to Central Bengaluru.
+- **Salary Benchmarks**:
+  - SDE-1 (0-2 yrs): ₹10L - ₹17L CTC
+  - SDE-2 (2-5 yrs): ₹22L - ₹40L CTC
+  - Staff / Lead / Principal (5-10+ yrs): ₹45L - ₹80L+ CTC
+  - Overall Corridor Band: ₹15L - ₹52L
+
+### 3.4 HITEC City & Gachibowli Tech Corridor
+- **Slug**: `hitec-city`
+- **City**: Hyderabad (`hyderabad`)
+- **Coordinates**: Latitude `17.443500`, Longitude `78.377200`
+- **Postal Code / Address**: `500081`, HITEC City Main Road, Madhapur, Telangana
+- **Metro Transit**: Hyderabad Metro Blue Line (Raidurg & Hitec City Stations)
+- **Primary Tech Towers & Campuses**: Mindspace IT Park, Knowledge City (Salarpuria Sattva), Cyber Towers, Financial District Nanakramguda, Amazon Campus
+- **Overview**: Hyderabad's premier technological epicenter housing hyperscalers (Microsoft, Amazon, Google, Oracle), fintech R&D centers, and global capability centers.
+- **Salary Benchmarks**:
+  - SDE-1 (0-2 yrs): ₹10L - ₹17L CTC
+  - SDE-2 (2-5 yrs): ₹22L - ₹38L CTC
+  - Staff / Lead / Principal (5-10+ yrs): ₹45L - ₹75L+ CTC
+  - Overall Corridor Band: ₹14L - ₹50L
+
+### 3.5 Sector 62 & Noida Expressway
+- **Slug**: `sector-62`
+- **City**: Noida (`noida`)
+- **Coordinates**: Latitude `28.628000`, Longitude `77.364900`
+- **Postal Code / Address**: `201309`, Sector 62 / Noida Expressway, Uttar Pradesh
+- **Metro Transit**: Delhi Metro Blue Line (Noida Electronic City & Sector 62 Stations), Aqua Line Metro
+- **Primary Tech Towers & Campuses**: Stellar IT Park, Candor Techspace (Sec 135), Logix Cyber Park, Advant Navis Business Park
+- **Overview**: Northern India's enterprise software services, systems consulting, and cloud infrastructure operations corridor.
+- **Salary Benchmarks**:
+  - SDE-1 (0-2 yrs): ₹8L - ₹15L CTC
+  - SDE-2 (2-5 yrs): ₹18L - ₹32L CTC
+  - Staff / Lead / Principal (5-10+ yrs): ₹35L - ₹65L+ CTC
+  - Overall Corridor Band: ₹11L - ₹38L
+
+### 3.6 Hinjawadi Rajiv Gandhi Infotech Park
+- **Slug**: `hinjawadi`
+- **City**: Pune (`pune`)
+- **Coordinates**: Latitude `18.591300`, Longitude `73.738900`
+- **Postal Code / Address**: `411057`, Rajiv Gandhi Infotech Park, Hinjawadi, Maharashtra
+- **Metro Transit**: Upcoming Pune Metro Line 3 (Hinjawadi to Shivajinagar)
+- **Primary Tech Towers & Campuses**: Rajiv Gandhi Infotech Park Phase 1, Phase 2, Phase 3, Quadron Business Park, Embassy TechZone
+- **Overview**: Pune's flagship IT/R&D hub hosting automotive engineering centers, embedded systems software, banking tech, and software consulting centers.
+- **Salary Benchmarks**:
+  - SDE-1 (0-2 yrs): ₹8L - ₹16L CTC
+  - SDE-2 (2-5 yrs): ₹18L - ₹35L CTC
+  - Staff / Lead / Principal (5-10+ yrs): ₹38L - ₹70L+ CTC
+  - Overall Corridor Band: ₹12L - ₹42L
+
+### 3.7 Bandra Kurla Complex (BKC) & Powai
+- **Slug**: `bkc`
+- **City**: Mumbai (`mumbai`)
+- **Coordinates**: Latitude `19.066400`, Longitude `72.868700`
+- **Postal Code / Address**: `400051`, Bandra Kurla Complex, Bandra East, Maharashtra
+- **Metro Transit**: Mumbai Metro Line 3 (Aqua Line - BKC Station), Western & Central Suburban Railways
+- **Primary Tech Towers & Campuses**: Maker Maxity, The Capital BKC, Hiranandani Business Park Powai, Nirlon Knowledge Park Goregaon
+- **Overview**: India's financial technology capital hosting quantitative hedge funds, algorithmic high-frequency trading desks, global investment banking technology, and fintech unicorns.
+- **Salary Benchmarks**:
+  - SDE-1 (0-2 yrs): ₹14L - ₹22L CTC
+  - SDE-2 (2-5 yrs): ₹28L - ₹52L CTC
+  - Staff / Lead / Principal (5-10+ yrs): ₹55L - ₹100L+ CTC
+  - Overall Corridor Band: ₹18L - ₹60L
+
+### 3.8 Aerocity Worldmark & South Delhi Tech
+- **Slug**: `aerocity`
+- **City**: Delhi (`delhi`)
+- **Coordinates**: Latitude `28.551000`, Longitude `77.121500`
+- **Postal Code / Address**: `110037`, Asset Area 4, Hospitality District, Aerocity, Delhi
+- **Metro Transit**: Delhi Metro Airport Express Line (Delhi Aerocity Station), Magenta Line Interchange
+- **Primary Tech Towers & Campuses**: Worldmark 1, 2 & 3 Aerocity, Okhla NSIC Phase 3 Tech Hub, Barakhamba Corporate Towers
+- **Overview**: High-end corporate software headquarters, global tech strategy centers, and international consultancy hubs directly adjacent to IGI International Airport.
+- **Salary Benchmarks**:
+  - SDE-1 (0-2 yrs): ₹12L - ₹20L CTC
+  - SDE-2 (2-5 yrs): ₹24L - ₹45L CTC
+  - Staff / Lead / Principal (5-10+ yrs): ₹48L - ₹85L+ CTC
+  - Overall Corridor Band: ₹16L - ₹55L
+
+### 3.9 Additional Indexed Regional Hubs
+- **Kochi**: Infopark Phase 1 & 2, SmartCity Kochi (`lat: 9.9816, lon: 76.3533`). Marine & enterprise cloud software.
+- **Chennai**: Old Mahabalipuram Road (OMR) & Tidel Park (`lat: 12.9815, lon: 80.2437`). SaaS capital, fintech, automotive IT.
+- **Chandigarh**: IT Park Kishangarh & Mohali Quark City (`lat: 30.7258, lon: 76.8443`). Software outsourcing & product studios.
+- **Kolkata**: Sector V Salt Lake & New Town Action Area II (`lat: 22.5802, lon: 88.4326`). Enterprise IT & data analytics hubs.
+
+---
+
+## 4. API Reference & Data Query Endpoints
+
+### 4.1 Jobs Map Points Feed
+- **Endpoint**: `GET /api/jobs/map-points`
+- **Host**: `https://www.mapmycareer.online`
+- **Description**: Returns a compressed geospatial tuple payload designed for high-performance map cluster rendering.
+- **Response Format**: `Array<[id: string, lat: number, lon: number, levelIndex: number]>`
+  - `id`: Unique Job identifier
+  - `lat`: Pinned physical latitude
+  - `lon`: Pinned physical longitude
+  - `levelIndex`: 0 = Entry, 1 = Mid, 2 = Senior, 3 = Lead/Principal, 4 = Other
+- **Caching**: `Cache-Control: public, max-age=300, s-maxage=3600, stale-while-revalidate=86400`
+
+### 4.2 Full Static Jobs Dataset Feed
+- **Endpoint**: `GET /data/jobs.json`
+- **Host**: `https://www.mapmycareer.online`
+- **Description**: Static pre-compiled dataset containing the full catalog of indexed engineering positions.
+- **Schema Format**:
+```json
+[
+  {
+    "id": 1024,
+    "title": "Senior Backend Engineer - Platform",
+    "company": "Enterprise SaaS Co",
+    "company_logo": "https://img.logo.dev/company.com?token=...",
+    "company_domain": "company.com",
+    "experience_yoe": "4-7 years",
+    "experience_level": "Senior",
+    "job_type": "Full-time",
+    "city": "Bengaluru",
+    "hub": "Outer Ring Road",
+    "lat": 12.9352,
+    "lon": 77.6946,
+    "skills": ["Go", "Kubernetes", "PostgreSQL", "Kafka"],
+    "salary_range": "₹32L - ₹45L",
+    "salary_min_lpa": 32,
+    "salary_max_lpa": 45,
+    "workplace_model": "Hybrid",
+    "apply_url": "https://boards.greenhouse.io/company/jobs/12345",
+    "source": "greenhouse"
+  }
+]
+```
+
+### 4.3 Programmatic Query Parameters (`/jobs` and `/jobs/[city]/[corridor]`)
+When consuming job listings on frontend surfaces or querying endpoints, the following parameters are supported:
+- `query` / `q` (string): Textual filter matching title, company name, or technology skills (e.g. `query=golang`).
+- `city` (string): Target city slug (`bengaluru`, `gurugram`, `hyderabad`, `pune`, `noida`, `mumbai`, `delhi`, `kochi`).
+- `corridor` (string): Specific tech corridor slug matching `TECH_CORRIDORS` (`dlf-cyber-city`, `outer-ring-road`, `whitefield`, etc.).
+- `level` (string): Filter by tier (`Entry`, `Mid`, `Senior`, `Lead`, `Principal`).
+- `workplace` (string): Filter by workplace policy (`On-site`, `Hybrid`, `Remote`).
+- `min_salary` (number): Minimum compensation boundary in LPA (Lakhs Per Annum).
+- `max_salary` (number): Maximum compensation boundary in LPA.
+
+---
+
+## 5. Canonical URLs & Sitemaps
+
+- Main Radar Application: `https://www.mapmycareer.online/`
+- Sitemap Index: `https://www.mapmycareer.online/sitemap.xml`
+- LLM Overview: `https://www.mapmycareer.online/llms.txt`
+- Full LLM Specification: `https://www.mapmycareer.online/llms-full.txt`
+- Robots Policy: `https://www.mapmycareer.online/robots.txt`

@@ -1,0 +1,49 @@
+# MapMyCareer
+
+> Geospatial tech job discovery radar indexing 25,000+ verified engineering roles across India's top tech corridors (Bengaluru, Delhi NCR, Hyderabad, Pune, Mumbai, etc.) mapped to exact tech park coordinates and metro transit lines.
+
+MapMyCareer eliminates recruiter spam, ghost listings, and geographic ambiguity by indexing verified job postings directly from employer Applicant Tracking Systems (ATS) including Greenhouse, Lever, Ashby, and Workday. Every job is geocoded to physical office parks, SEZ towers, and metro corridors to help engineers minimize commute overhead.
+
+## Core Offerings
+
+- **Interactive Geospatial Radar**: Filter roles by physical commute distance, metro station walking radius, and tech corridor boundaries.
+- **Direct ATS Ingestion Engine**: Zero third-party aggregator latency. Jobs are synchronized directly from employer career portals with 100% verified application links.
+- **Granular Compensation Benchmarks**: SDE-1, SDE-2, and Staff/Lead salary bands calibrated to actual regional cost of living and tech park tiers.
+- **Public High-Performance Data API**: Cached GeoJSON and coordinate streams for programmatic querying and analytics.
+
+## Primary Tech Corridors & City Pages
+
+Explore corridor-specific job hubs and transit mappings:
+
+- [DLF Cyber City & Cyber Hub (Gurugram)](https://www.mapmycareer.online/jobs/gurugram/dlf-cyber-city): Rapid Metro (Cyber City & Moulsari Ave), Building 8/10/14, Infinity Towers. SDE-1: ₹10-18L, SDE-2: ₹22-42L, Staff/Lead: ₹45-85L.
+- [Outer Ring Road Tech Corridor (Bengaluru)](https://www.mapmycareer.online/jobs/bengaluru/outer-ring-road): Bellandur, Marathahalli, Cessna, Ecospace, Embassy TechVillage. SDE-1: ₹12-20L, SDE-2: ₹26-48L, Staff/Lead: ₹55-95L.
+- [Whitefield IT Park Corridor (Bengaluru)](https://www.mapmycareer.online/jobs/bengaluru/whitefield): Purple Line Metro (Kadugodi, Hopefarm), ITPB, Sigma Tech Park, EPIP Zone. SDE-1: ₹10-17L, SDE-2: ₹22-40L, Staff/Lead: ₹45-80L.
+- [HITEC City & Gachibowli (Hyderabad)](https://www.mapmycareer.online/jobs/hyderabad/hitec-city): Blue Line Metro (Raidurg & Hitec City), Mindspace, Knowledge City, Financial District. SDE-1: ₹10-17L, SDE-2: ₹22-38L, Staff/Lead: ₹45-75L.
+- [Sector 62 & Noida Expressway (Noida)](https://www.mapmycareer.online/jobs/noida/sector-62): Blue Line Metro (Electronic City), Candor Techspace Sec 135, Advant Navis. SDE-1: ₹8-15L, SDE-2: ₹18-32L, Staff/Lead: ₹35-65L.
+- [Hinjawadi Rajiv Gandhi Infotech Park (Pune)](https://www.mapmycareer.online/jobs/pune/hinjawadi): Pune Metro Line 3, Phase 1-3, Embassy TechZone, Quadron. SDE-1: ₹8-16L, SDE-2: ₹18-35L, Staff/Lead: ₹38-70L.
+- [Bandra Kurla Complex & Powai (Mumbai)](https://www.mapmycareer.online/jobs/mumbai/bkc): Mumbai Metro Line 3 Aqua Line, Maker Maxity, Capital BKC, Hiranandani Powai. SDE-1: ₹14-22L, SDE-2: ₹28-52L, Staff/Lead: ₹55-100L.
+- [Aerocity Worldmark & South Delhi (Delhi)](https://www.mapmycareer.online/jobs/delhi/aerocity): Airport Express Line, Worldmark 1-3, Okhla NSIC Phase 3. SDE-1: ₹12-20L, SDE-2: ₹24-45L, Staff/Lead: ₹48-85L.
+
+Additional tech clusters indexed:
+- [Bengaluru Tech Jobs](https://www.mapmycareer.online/jobs/bengaluru)
+- [Gurugram Tech Jobs](https://www.mapmycareer.online/jobs/gurugram)
+- [Hyderabad Tech Jobs](https://www.mapmycareer.online/jobs/hyderabad)
+- [Noida Tech Jobs](https://www.mapmycareer.online/jobs/noida)
+- [Pune Tech Jobs](https://www.mapmycareer.online/jobs/pune)
+- [Mumbai Tech Jobs](https://www.mapmycareer.online/jobs/mumbai)
+- [Delhi Tech Jobs](https://www.mapmycareer.online/jobs/delhi)
+- [Kochi / Infopark Tech Jobs](https://www.mapmycareer.online/jobs/kochi)
+
+## Data API & Feeds
+
+- **Geospatial Point Cluster API**: `GET https://www.mapmycareer.online/api/jobs/map-points` — Returns lightweight tuple arrays `[id, lat, lon, levelIndex]` optimized for map rendering.
+- **Complete Dataset Feed**: `GET https://www.mapmycareer.online/data/jobs.json` — Static pre-built JSON feed of all indexed jobs with company metadata, coordinates, salary bounds, and apply URLs.
+- **Sitemap Index**: `https://www.mapmycareer.online/sitemap.xml` — Canonical index of all static corridors, cities, and programmatic job pages.
+- **Full LLM Context**: `https://www.mapmycareer.online/llms-full.txt` — Exhaustive documentation including schema attributes, corridor coordinates, salary matrices, and ATS validation pipeline.
+
+## Methodology & ATS Verification
+
+1. **Automated ATS Polling**: Continuous scrapers crawl Greenhouse, Lever, Ashby, and direct company career APIs every 4 to 12 hours.
+2. **Ghost Job Pruning**: Expired listings or inactive redirect links are automatically removed within 24 hours of closing.
+3. **Geospatial Extraction**: Company addresses, campus names, and building codes are resolved to exact GPS lat/lon pairs using OpenStreetMap and proprietary tech park centroid databases.
+4. **Standardized Level Mapping**: Titles and years of experience are normalized into standardized engineering tiers (Entry, Mid, Senior, Lead, Principal).
