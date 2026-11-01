@@ -84,7 +84,10 @@ export const metadata: Metadata = {
     images: ['/api/og?title=Geo-Spatial%20Tech%20Job%20Radar&company=India%20Tech%20Hubs&city=Delhi%20NCR%20%7C%20Bengaluru%20%7C%20Hyderabad&hub=DLF%20Cyber%20City%20%7C%20Outer%20Ring%20Road&salary=%E2%82%B925L%20-%20%E2%82%B960L'],
   },
   verification: {
-    google: 'XR4_4wE5Q3wYA7z66aZFzdZNDBgLOQoOYDowiaKROck',
+    google: [
+      'XR4_4wE5Q3wYA7z66aZFzdZNDBgLOQoOYDowiaKROck',
+      'n0HS2xjwGda9Y4krCMpAMbX75vA3EDhKtjTxOb8aKKw',
+    ],
   },
 };
 
