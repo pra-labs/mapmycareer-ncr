@@ -1,8 +1,12 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
+
+const umamiWebsiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID || '362b77cd-1a57-44b3-a3c9-4dc48f55a59c';
+const umamiHostUrl = process.env.NEXT_PUBLIC_UMAMI_HOST_URL || 'http://umami.local';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -264,6 +268,14 @@ export default function RootLayout({
         {children}
         <Analytics />
         <SpeedInsights />
+        {umamiWebsiteId && (
+          <Script
+            defer
+            src={`${umamiHostUrl}/script.js`}
+            data-website-id={umamiWebsiteId}
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );
