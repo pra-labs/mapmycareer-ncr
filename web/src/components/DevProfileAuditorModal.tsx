@@ -75,8 +75,8 @@ export const DevProfileAuditorModal: React.FC<DevProfileAuditorModalProps> = ({
     try {
       const res = await auditGitHubProfile(username);
       setAuditResult(res);
-    } catch (err: any) {
-      setAuditError(err.message || 'Failed to audit profile');
+    } catch (err: unknown) {
+      setAuditError(err instanceof Error ? err.message : 'Failed to audit profile');
     } finally {
       setIsAuditing(false);
     }
@@ -88,7 +88,7 @@ export const DevProfileAuditorModal: React.FC<DevProfileAuditorModalProps> = ({
     try {
       const res = await calculateNoticePeriod(resignationDate, noticeDays);
       setNoticeResult(res);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
     } finally {
       setIsCalculatingNotice(false);
