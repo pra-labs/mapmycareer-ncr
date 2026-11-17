@@ -8,6 +8,7 @@ import Link from 'next/link';
 
 interface CorridorMiniMapProps {
   jobs: Job[];
+  totalJobsCount?: number;
   corridorName: string;
   centerLat: number;
   centerLon: number;
@@ -30,6 +31,7 @@ const LeafletMap = dynamic(
 
 export const CorridorMiniMap: React.FC<CorridorMiniMapProps> = ({
   jobs,
+  totalJobsCount,
   corridorName,
   centerLat,
   centerLon,
@@ -44,7 +46,7 @@ export const CorridorMiniMap: React.FC<CorridorMiniMapProps> = ({
             {corridorName} Interactive Campus Radar
           </span>
           <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-            {jobs.length} mapped roles
+            {totalJobsCount ?? jobs.length} mapped roles
           </span>
         </div>
         <Link

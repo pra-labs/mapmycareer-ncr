@@ -397,7 +397,8 @@ export default async function CorridorJobsPage({ params }: CorridorPageProps) {
         {jobs.length > 0 && (
           <section aria-label="Interactive Map View">
             <CorridorMiniMap
-              jobs={jobs}
+              jobs={jobs.slice(0, 100)}
+              totalJobsCount={jobs.length}
               corridorName={config.displayName}
               centerLat={config.lat}
               centerLon={config.lon}
