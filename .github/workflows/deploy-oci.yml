@@ -33,15 +33,24 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'web/package-lock.json'
 
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
       - name: Build Next.js Standalone
         working-directory: web
         run: |
           npm ci
           npm run build
           # Copy static and public assets into standalone directory structure
-          mkdir -p .next/standalone/public .next/standalone/.next/static
+          mkdir -p .next/standalone/public .next/standalone/.next/static .next/standalone/data .next/standalone/web/data
           cp -r public/* .next/standalone/public/ || true
           cp -r .next/static/* .next/standalone/.next/static/
+          if [ -f data/jobs.db ]; then
+            cp data/jobs.db .next/standalone/data/jobs.db
+            cp data/jobs.db .next/standalone/web/data/jobs.db
+          fi
 
       - name: Deploy to OCI via SSH/rsync
         uses: easingthemes/ssh-deploy@v5.0.3

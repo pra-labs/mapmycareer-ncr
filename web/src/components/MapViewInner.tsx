@@ -8,6 +8,7 @@ import { Job } from '../types/job';
 import { getCleanLogoUrl } from '../lib/filterUtils';
 import { ExternalLink, ChevronRight, Navigation, Compass } from 'lucide-react';
 import { useSuperclusterWorker } from '../hooks/useSuperclusterWorker';
+import { trackEvent } from '../lib/analytics';
 
 interface MapViewInnerProps {
   jobs: Job[];
@@ -350,7 +351,16 @@ const CompanyPopup: React.FC<CompanyPopupProps> = ({ cluster, onSelectJob }) => 
                   href={job.apply_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    trackEvent('job_apply_outbound', {
+                      job_id: job.id,
+                      title: job.title,
+                      company: job.company,
+                      url: job.apply_url,
+                      source: 'map_popup',
+                    });
+                  }}
                   className="text-blue-600 hover:text-blue-800 transition-colors"
                   title="Apply"
                 >
@@ -448,6 +458,13 @@ function SuperclusterRenderer({
               icon={createSuperclusterIcon(pointCount)}
               eventHandlers={{
                 click: () => {
+                  trackEvent('map_pin_select', {
+                    type: 'supercluster',
+                    cluster_id: clusterId,
+                    point_count: pointCount,
+                    lat,
+                    lng,
+                  });
                   map.setView([lat, lng], Math.min(map.getZoom() + 2, 18), {
                     animate: true,
                   });
@@ -474,6 +491,17 @@ function SuperclusterRenderer({
             key={`company-${companyCluster.key}`}
             position={[lat, lng]}
             icon={icon}
+            eventHandlers={{
+              click: () => {
+                trackEvent('map_pin_select', {
+                  type: 'company_pin',
+                  company: companyCluster.company,
+                  jobs_count: companyCluster.jobs.length,
+                  lat,
+                  lng,
+                });
+              },
+            }}
           >
             <Popup
               className="custom-leaflet-popup company-cluster-popup"

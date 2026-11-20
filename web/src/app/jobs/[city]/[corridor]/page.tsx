@@ -1,6 +1,4 @@
 import { Metadata } from 'next';
-import fs from 'fs';
-import path from 'path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -15,43 +13,22 @@ import {
   Layers,
   ChevronRight,
 } from 'lucide-react';
-import { Job } from '@/types/job';
 import {
-  getAllCorridorSlugs,
   getCorridorConfig,
-  CorridorConfig,
 } from '@/lib/corridors';
+import { getJobsByCityAndCorridor, getAllCityCorridorPairs } from '@/lib/db';
 import { CorridorMiniMap } from '@/components/CorridorMiniMap';
 
 interface CorridorPageProps {
   params: Promise<{ city: string; corridor: string }>;
 }
 
-function getJobsForCorridor(config: CorridorConfig): Job[] {
-  const dataPath = path.join(process.cwd(), 'public', 'data', 'jobs.json');
-  if (!fs.existsSync(dataPath)) return [];
-
-  const rawData = fs.readFileSync(dataPath, 'utf-8');
-  const allJobs: Job[] = JSON.parse(rawData);
-
-  // Filter jobs by city and corridor keywords
-  return allJobs.filter((job) => {
-    if (!job.city) return false;
-    const cityMatch =
-      job.city.toLowerCase().replace(/\s+/g, '-') === config.citySlug.toLowerCase();
-    if (!cityMatch) return false;
-
-    const hubText = (job.hub || '').toLowerCase();
-    const titleText = (job.title || '').toLowerCase();
-
-    return config.hubKeywords.some(
-      (kw) => hubText.includes(kw.toLowerCase()) || titleText.includes(kw.toLowerCase())
-    );
-  });
-}
-
 export async function generateStaticParams() {
-  return getAllCorridorSlugs();
+  const pairs = getAllCityCorridorPairs();
+  return pairs.map((pair) => ({
+    city: pair.city,
+    corridor: pair.corridor,
+  }));
 }
 
 export async function generateMetadata({ params }: CorridorPageProps): Promise<Metadata> {
@@ -62,7 +39,7 @@ export async function generateMetadata({ params }: CorridorPageProps): Promise<M
     return { title: 'Tech Corridor Not Found | MapMyCareer' };
   }
 
-  const jobs = getJobsForCorridor(config);
+  const jobs = getJobsByCityAndCorridor(city, corridor);
   const countDisplay = jobs.length > 0 ? `${jobs.length}+` : 'Explore';
 
   const title = `${countDisplay} ${config.displayName} Tech Openings | Campus Radar & Metro Guide`;
@@ -99,7 +76,7 @@ export default async function CorridorJobsPage({ params }: CorridorPageProps) {
     notFound();
   }
 
-  const jobs = getJobsForCorridor(config);
+  const jobs = getJobsByCityAndCorridor(city, corridor);
 
   // Structured ItemList, Place, and FAQPage Schemas
   const structuredCorridorSchema = {

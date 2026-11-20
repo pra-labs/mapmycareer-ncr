@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { Job, FilterState, CandidateProfile, JobMatchResult } from '../types/job';
 import { filterJobs, extractUniqueValues } from '../lib/filterUtils';
 import { scoreJobMatch } from '../lib/resumeMatcher';
+import { trackEvent } from '../lib/analytics';
 import { Header } from '../components/Header';
 import { FilterBar } from '../components/FilterBar';
 import { JobCard } from '../components/JobCard';
@@ -75,6 +76,27 @@ export default function Home() {
     selectedSkills: [],
     showSavedOnly: false,
   });
+
+  // Track filter changes debounced 600ms
+  const isFirstFilterRender = React.useRef(true);
+  useEffect(() => {
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      trackEvent('job_search_filter', {
+        search_query: filters.searchQuery || undefined,
+        city: filters.selectedCity !== 'All Cities' ? filters.selectedCity : undefined,
+        hub_corridor: filters.selectedHub !== 'All Hubs' ? filters.selectedHub : undefined,
+        experience_levels: filters.experienceLevels.length > 0 ? filters.experienceLevels.join(',') : undefined,
+        workplace_models: filters.workplaceModels.length > 0 ? filters.workplaceModels.join(',') : undefined,
+        min_salary_lpa: filters.minSalaryLPA > 0 ? filters.minSalaryLPA : undefined,
+      });
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [filters]);
 
   const [savedJobIds, setSavedJobIds] = useState<Set<string | number>>(new Set());
 
@@ -376,6 +398,12 @@ export default function Home() {
                       isSaved={savedJobIds.has(job.id)}
                       matchResult={activeResumeProfile ? jobMatchMap.get(job.id) : undefined}
                       onSelect={(j) => {
+                        trackEvent('job_detail_open', {
+                          job_id: j.id,
+                          title: j.title,
+                          company: j.company,
+                          source: 'feed_card',
+                        });
                         setSelectedJob(j);
                         setModalJob(j);
                       }}
@@ -436,6 +464,12 @@ export default function Home() {
               selectedJob={selectedJob}
               hoveredJob={hoveredJob}
               onSelectJob={(j) => {
+                trackEvent('job_detail_open', {
+                  job_id: j.id,
+                  title: j.title,
+                  company: j.company,
+                  source: 'map_popup',
+                });
                 setSelectedJob(j);
                 setModalJob(j);
                 // Scroll card into view in left pane

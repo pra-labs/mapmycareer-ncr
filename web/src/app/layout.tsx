@@ -3,9 +3,6 @@ import Script from 'next/script';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
-const umamiWebsiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID || '60d1d5cb-713d-45c9-bb85-b174795c99cd';
-const umamiHostUrl = process.env.NEXT_PUBLIC_UMAMI_HOST_URL || 'https://analytics.pralabs.dev';
-
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -264,14 +261,12 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
-        {umamiWebsiteId && (
-          <Script
-            defer
-            src={`${umamiHostUrl}/script.js`}
-            data-website-id={umamiWebsiteId}
-            strategy="afterInteractive"
-          />
-        )}
+        <Script
+          src="/pulse.js"
+          data-host-url="https://mapmycareer.online"
+          data-website-id="60d1d5cb-713d-45c9-bb85-b174795c99cd"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

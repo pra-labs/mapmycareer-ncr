@@ -1,11 +1,9 @@
 import { Metadata } from 'next';
-import fs from 'fs';
-import path from 'path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { MapPin, Building2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Job } from '@/types/job';
-
+import { getJobsByCity, getAllCitySlugs } from '@/lib/db';
 import { TECH_CORRIDORS } from '@/lib/corridors';
 
 interface CityMetadata {
@@ -36,21 +34,10 @@ interface CityPageProps {
 }
 
 function getJobsForCity(citySlug: string): { cityDisplayName: string; jobs: Job[] } {
-  const dataPath = path.join(process.cwd(), 'public', 'data', 'jobs.json');
-  if (!fs.existsSync(dataPath)) {
-    return { cityDisplayName: '', jobs: [] };
-  }
-
-  const rawData = fs.readFileSync(dataPath, 'utf-8');
-  const allJobs: Job[] = JSON.parse(rawData);
-
-  const matchedJobs = allJobs.filter((j) => {
-    if (!j.city) return false;
-    return j.city.toLowerCase().replace(/\s+/g, '-') === citySlug.toLowerCase();
-  });
+  const matchedJobs = getJobsByCity(citySlug);
 
   const cityDisplayName =
-    matchedJobs.length > 0
+    matchedJobs.length > 0 && matchedJobs[0].city
       ? matchedJobs[0].city
       : citySlug
           .split('-')
@@ -61,20 +48,8 @@ function getJobsForCity(citySlug: string): { cityDisplayName: string; jobs: Job[
 }
 
 export async function generateStaticParams() {
-  const dataPath = path.join(process.cwd(), 'public', 'data', 'jobs.json');
-  if (!fs.existsSync(dataPath)) return [];
-
-  const rawData = fs.readFileSync(dataPath, 'utf-8');
-  const allJobs: { city?: string }[] = JSON.parse(rawData);
-
-  const uniqueCities = new Set<string>();
-  allJobs.forEach((j) => {
-    if (j.city) {
-      uniqueCities.add(j.city.toLowerCase().replace(/\s+/g, '-'));
-    }
-  });
-
-  return Array.from(uniqueCities).map((city) => ({ city }));
+  const citySlugs = getAllCitySlugs();
+  return citySlugs.map((city) => ({ city }));
 }
 
 export async function generateMetadata({ params }: CityPageProps): Promise<Metadata> {

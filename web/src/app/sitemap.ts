@@ -1,7 +1,5 @@
 import type { MetadataRoute } from 'next';
-import fs from 'fs';
-import path from 'path';
-import { TECH_CORRIDORS } from '@/lib/corridors';
+import { getAllCitySlugs, getAllCityCorridorPairs } from '@/lib/db';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://www.mapmycareer.online';
@@ -15,40 +13,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   try {
-    const dataPath = path.join(process.cwd(), 'public', 'data', 'jobs.json');
-    if (fs.existsSync(dataPath)) {
-      const fileData = fs.readFileSync(dataPath, 'utf-8');
-      const jobs = JSON.parse(fileData);
-
-      // Unique Cities
-      const cities = new Set<string>();
-      jobs.forEach((j: { city?: string }) => {
-        if (j.city) cities.add(j.city.toLowerCase().replace(/\s+/g, '-'));
+    // Unique Cities via db helper
+    const cities = getAllCitySlugs();
+    cities.forEach((citySlug) => {
+      entries.push({
+        url: `${baseUrl}/jobs/${citySlug}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.8,
       });
+    });
 
-      cities.forEach((citySlug) => {
-        entries.push({
-          url: `${baseUrl}/jobs/${citySlug}`,
-          lastModified: new Date(),
-          changeFrequency: 'daily',
-          priority: 0.8,
-        });
+    // High-Intent Corridors via db helper
+    const corridorPairs = getAllCityCorridorPairs();
+    corridorPairs.forEach((pair) => {
+      entries.push({
+        url: `${baseUrl}/jobs/${pair.city}/${pair.corridor}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.9,
       });
-
-      // High-Intent Corridors
-      Object.values(TECH_CORRIDORS).forEach((corridor) => {
-        entries.push({
-          url: `${baseUrl}/jobs/${corridor.citySlug}/${corridor.slug}`,
-          lastModified: new Date(),
-          changeFrequency: 'daily',
-          priority: 0.9,
-        });
-      });
-    }
+    });
   } catch (e) {
     console.error('Error generating dynamic sitemap:', e);
   }
 
   return entries;
 }
-

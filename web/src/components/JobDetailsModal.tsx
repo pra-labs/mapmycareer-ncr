@@ -26,6 +26,7 @@ import {
   estimateCommute,
   CommuteEstimate,
 } from '../lib/commuteService';
+import { trackEvent } from '../lib/analytics';
 
 interface JobDetailsModalProps {
   job: Job | null;
@@ -472,6 +473,15 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
               href={job.apply_url}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                trackEvent('job_apply_outbound', {
+                  job_id: job.id,
+                  title: job.title,
+                  company: job.company,
+                  url: job.apply_url,
+                  source: 'job_details_modal',
+                });
+              }}
               className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700"
             >
               <span>Apply Directly</span>
