@@ -13,7 +13,19 @@ const LEVEL_MAP: Record<string, number> = {
   executive: 3,
 };
 
-let cachedPoints: CompactJobTuple[] | null = null;
+// Normalized tuple: [id, lat, lon, title, company, level, city, url]
+export type DetailedMapPointTuple = [
+  id: number | string,
+  lat: number,
+  lon: number,
+  title: string,
+  company: string,
+  level: number,
+  city: string,
+  url: string
+];
+
+let cachedPoints: DetailedMapPointTuple[] | null = null;
 
 export async function GET() {
   if (cachedPoints) {
@@ -25,6 +37,18 @@ export async function GET() {
   }
 
   try {
+    // If pre-built static map-points.json exists, serve it
+    const staticMapPointsPath = path.join(process.cwd(), 'public/data/map-points.json');
+    if (fs.existsSync(staticMapPointsPath)) {
+      const staticData = fs.readFileSync(staticMapPointsPath, 'utf-8');
+      cachedPoints = JSON.parse(staticData);
+      return NextResponse.json(cachedPoints, {
+        headers: {
+          'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
+        },
+      });
+    }
+
     const filePath = path.join(process.cwd(), 'public/data/jobs.json');
     if (!fs.existsSync(filePath)) {
       return NextResponse.json([]);
@@ -33,13 +57,22 @@ export async function GET() {
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const jobs = JSON.parse(fileContent);
 
-    // Build thin payload: [id, lat, lon, levelIndex]
-    const points: CompactJobTuple[] = [];
+    // Build payload: [id, lat, lon, title, company, level, city, url]
+    const points: DetailedMapPointTuple[] = [];
     for (const j of jobs) {
       if (typeof j.lat === 'number' && typeof j.lon === 'number') {
         const lvlStr = (j.experience_level || '').toLowerCase();
         const level = LEVEL_MAP[lvlStr] ?? 4;
-        points.push([String(j.id), j.lat, j.lon, level]);
+        points.push([
+          j.id,
+          j.lat,
+          j.lon,
+          j.title || '',
+          j.company || '',
+          level,
+          j.city || '',
+          j.apply_url || ''
+        ]);
       }
     }
 
