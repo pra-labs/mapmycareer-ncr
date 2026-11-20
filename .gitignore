@@ -70,3 +70,4 @@ web/.next/
 web/node_modules/
 web/data/*.db*
 
+web/public/data/map-points.json
