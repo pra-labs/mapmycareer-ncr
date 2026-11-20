@@ -49,10 +49,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No new jobs or updates to commit."
           else
-            git commit -m "chore(data): auto-sync live verified jobs [skip ci] [skip actions]"
+            git commit -m "chore(data): auto-sync live verified jobs"
             git push
-            if [ -n "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" ]; then
-              echo "Triggering Vercel production deployment hook..."
-              curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
-            fi
           fi
