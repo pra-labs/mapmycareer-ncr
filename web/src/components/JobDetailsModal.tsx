@@ -19,6 +19,7 @@ import {
   Train,
   Car,
   Wind,
+  Sparkles,
 } from 'lucide-react';
 import { fetchWeatherAndAqi, WeatherAqiData } from '../lib/weatherService';
 import {
@@ -37,6 +38,7 @@ interface JobDetailsModalProps {
   onAuditResume?: (job: Job) => void;
   onGenerateResume?: (job: Job) => void;
   onVerifyRecruiter?: (job: Job) => void;
+  onOptimizeBullet?: (job: Job) => void;
 }
 
 export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
@@ -48,6 +50,7 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
   onAuditResume,
   onGenerateResume,
   onVerifyRecruiter,
+  onOptimizeBullet,
 }) => {
   // Live Weather & AQI State
   const [weatherData, setWeatherData] = useState<WeatherAqiData | null>(null);
@@ -434,7 +437,7 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
             Tailor your application and verify recruiter outreach with deterministic engines:
           </p>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <button
               onClick={() => onAuditResume?.(job)}
               className="flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-white py-3 px-2 text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 dark:border-blue-900/60 dark:bg-zinc-800 dark:text-blue-300 dark:hover:bg-zinc-700"
@@ -442,6 +445,16 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
               <Zap className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
               <span>Audit Resume</span>
             </button>
+
+            {onOptimizeBullet && (
+              <button
+                onClick={() => onOptimizeBullet(job)}
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-violet-200 bg-white py-3 px-2 text-xs font-semibold text-violet-700 shadow-sm transition hover:bg-violet-50 dark:border-violet-900/60 dark:bg-zinc-800 dark:text-violet-300 dark:hover:bg-zinc-700"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                <span>AI Bullet Optimizer</span>
+              </button>
+            )}
 
             <button
               onClick={() => onGenerateResume?.(job)}

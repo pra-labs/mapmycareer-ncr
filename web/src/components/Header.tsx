@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Layers, FileCode2, Zap, MailCheck, BookOpen, Target, Award } from 'lucide-react';
+import { Compass, Layers, FileCode2, Zap, MailCheck, BookOpen, Target, Award, Sparkles } from 'lucide-react';
 
 interface HeaderProps {
   totalJobs: number;
@@ -12,6 +12,7 @@ interface HeaderProps {
   onOpenDevProfileAuditor?: () => void;
   onScrollToInsights?: () => void;
   onOpenFaqModal?: () => void;
+  onOpenAtsBulletOptimizer?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDevProfileAuditor,
   onScrollToInsights,
   onOpenFaqModal,
+  onOpenAtsBulletOptimizer,
 }) => {
   const [isToolsOpen, setIsToolsOpen] = React.useState(false);
   const toolsRef = React.useRef<HTMLDivElement>(null);
@@ -77,6 +79,19 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="sm:hidden">{hasActiveResumeMatch ? 'Matched' : 'Match'}</span>
         </button>
 
+        {/* AI Resume Bullet Optimizer Quick Trigger */}
+        {onOpenAtsBulletOptimizer && (
+          <button
+            onClick={onOpenAtsBulletOptimizer}
+            className="hidden md:flex items-center gap-1.5 rounded-lg border border-violet-200/80 bg-violet-50/70 px-2.5 py-1.5 min-h-[36px] text-xs font-semibold text-violet-700 shadow-sm transition hover:bg-violet-100 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-violet-300 dark:hover:bg-violet-900/50"
+            title="Optimize resume bullet points in real-time with Edge AI"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+            <span className="hidden lg:inline">AI Bullet Optimizer</span>
+            <span className="lg:hidden">AI Bullets</span>
+          </button>
+        )}
+
         {/* CareerForge Tools & Utilities Dropdown Menu */}
         <div className="relative" ref={toolsRef}>
           <button
@@ -124,6 +139,24 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="text-[10px] text-zinc-500 dark:text-zinc-400">100-pt Google XYZ audit</div>
                   </div>
                 </button>
+                {onOpenAtsBulletOptimizer && (
+                  <button
+                    onClick={() => {
+                      onOpenAtsBulletOptimizer();
+                      setIsToolsOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-violet-800 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-950/40 text-left transition"
+                  >
+                    <Sparkles className="h-4 w-4 text-violet-600 dark:text-violet-400 shrink-0" />
+                    <div>
+                      <div className="font-semibold flex items-center gap-1.5">
+                        <span>AI Bullet Optimizer</span>
+                        <span className="rounded bg-violet-100 px-1 py-0.2 text-[9px] font-bold text-violet-700 dark:bg-violet-900/60 dark:text-violet-300">Edge AI</span>
+                      </div>
+                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Real-time XYZ metric polish</div>
+                    </div>
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     onOpenResumeBuilder?.();

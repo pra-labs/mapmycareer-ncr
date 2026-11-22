@@ -18,7 +18,8 @@ export type AnalyticsEventName =
   | 'job_search_filter'
   | 'map_pin_select'
   | 'job_detail_open'
-  | 'job_apply_outbound';
+  | 'job_apply_outbound'
+  | 'ai_assistant_used';
 
 // Sensitive query parameters or tokens to strip from URLs / payloads
 const SENSITIVE_PARAM_REGEX = /(token|auth|key|secret|password|access_token|refresh_token|id_token|session|bearer)=([^&]+)/gi;

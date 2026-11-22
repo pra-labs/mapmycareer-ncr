@@ -18,6 +18,7 @@ import { AnnouncementBanner } from '../components/AnnouncementBanner';
 import { CorridorFaqSection } from '../components/CorridorFaqSection';
 import { CorridorFaqModal } from '../components/CorridorFaqModal';
 import { DevProfileAuditorModal } from '../components/DevProfileAuditorModal';
+import { AtsBulletOptimizerModal } from '../components/AtsBulletOptimizerModal';
 import { Loader2, AlertCircle, List, Map as MapIcon, Target, Sparkles, X } from 'lucide-react';
 
 export default function Home() {
@@ -58,6 +59,8 @@ export default function Home() {
   const [isDevProfileAuditorOpen, setIsDevProfileAuditorOpen] = useState<boolean>(false);
   const [isFaqModalOpen, setIsFaqModalOpen] = useState<boolean>(false);
   const [isResumeMatcherOpen, setIsResumeMatcherOpen] = useState<boolean>(false);
+  const [isBulletOptimizerOpen, setIsBulletOptimizerOpen] = useState<boolean>(false);
+  const [bulletOptimizerRole, setBulletOptimizerRole] = useState<string | undefined>(undefined);
   const [activeResumeProfile, setActiveResumeProfile] = useState<CandidateProfile | null>(null);
   const [matchThreshold, setMatchThreshold] = useState<number>(35);
   const [activeJobContext, setActiveJobContext] = useState<{
@@ -290,6 +293,10 @@ export default function Home() {
         }}
         onOpenDevProfileAuditor={() => {
           setIsDevProfileAuditorOpen(true);
+        }}
+        onOpenAtsBulletOptimizer={() => {
+          setBulletOptimizerRole(undefined);
+          setIsBulletOptimizerOpen(true);
         }}
         onScrollToInsights={handleScrollToInsights}
         onOpenFaqModal={() => setIsFaqModalOpen(true)}
@@ -527,6 +534,11 @@ export default function Home() {
         onAuditResume={handleAuditForJob}
         onGenerateResume={handleGenerateForJob}
         onVerifyRecruiter={handleVerifyRecruiterForJob}
+        onOptimizeBullet={(job) => {
+          setBulletOptimizerRole(job.title);
+          setModalJob(null);
+          setIsBulletOptimizerOpen(true);
+        }}
       />
 
       {/* Resume Matcher Radar Modal */}
@@ -576,6 +588,13 @@ export default function Home() {
       <CorridorFaqModal
         isOpen={isFaqModalOpen}
         onClose={() => setIsFaqModalOpen(false)}
+      />
+
+      {/* Edge AI ATS Resume Bullet Optimizer Modal */}
+      <AtsBulletOptimizerModal
+        isOpen={isBulletOptimizerOpen}
+        onClose={() => setIsBulletOptimizerOpen(false)}
+        targetRole={bulletOptimizerRole}
       />
     </div>
   );

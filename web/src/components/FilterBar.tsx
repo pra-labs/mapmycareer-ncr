@@ -1,7 +1,8 @@
 import React from 'react';
 import { FilterState } from '../types/job';
-import { Search, SlidersHorizontal, IndianRupee, RotateCcw, MapPin, Loader2, X } from 'lucide-react';
+import { Search, SlidersHorizontal, IndianRupee, RotateCcw, MapPin, Loader2, X, Sparkles } from 'lucide-react';
 import { lookupPincode, PincodeInfo } from '../lib/pincodeService';
+import { trackEvent } from '../lib/analytics';
 
 interface FilterBarProps {
   filters: FilterState;
@@ -24,6 +25,149 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   // PIN Code Auto-Search & Geocoding State
   const [detectedPinInfo, setDetectedPinInfo] = React.useState<PincodeInfo | null>(null);
   const [isLookingUpPin, setIsLookingUpPin] = React.useState(false);
+
+  // AI Search & Structured Filtering State
+  const [isAiSearching, setIsAiSearching] = React.useState(false);
+  const [aiExpandedInfo, setAiExpandedInfo] = React.useState<{
+    query: string;
+    summary: string;
+    originalFilters: FilterState;
+  } | null>(null);
+
+  const handleAiSearch = async () => {
+    const query = localSearch.trim();
+    if (!query || isAiSearching) return;
+
+    setIsAiSearching(true);
+
+    try {
+      const res = await fetch('/api/job-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'nl_search', query }),
+      });
+
+      if (!res.ok) {
+        // Fallback gracefully to standard keyword search on 429 or any non-OK status
+        console.warn(`[AI Search] Server status ${res.status}. Falling back to standard keyword search.`);
+        onFilterChange({ ...filters, searchQuery: query });
+        setIsAiSearching(false);
+        return;
+      }
+
+      const data = await res.json();
+      trackEvent('ai_assistant_used', { feature: 'nl_search' });
+
+      const updatedFilters: FilterState = { ...filters };
+      const appliedParts: string[] = [];
+
+      // 1. Role or extracted search query
+      const extractedRole = data.role || data.search_query || data.query;
+      if (extractedRole && typeof extractedRole === 'string') {
+        updatedFilters.searchQuery = extractedRole;
+        setLocalSearch(extractedRole);
+        appliedParts.push(`Role: "${extractedRole}"`);
+      } else {
+        updatedFilters.searchQuery = query;
+      }
+
+      // 2. City
+      const targetCity = data.city || data.location;
+      if (targetCity && typeof targetCity === 'string') {
+        const matchedCity = cities.find(
+          (c) => c.toLowerCase() === targetCity.toLowerCase()
+        );
+        if (matchedCity) {
+          updatedFilters.selectedCity = matchedCity;
+          appliedParts.push(`City: ${matchedCity}`);
+        }
+      }
+
+      // 3. Tech Hub / Zone
+      const targetHub = data.hub || data.corridor;
+      if (targetHub && typeof targetHub === 'string') {
+        const matchedHub = hubs.find(
+          (h) => h.toLowerCase() === targetHub.toLowerCase()
+        );
+        if (matchedHub) {
+          updatedFilters.selectedHub = matchedHub;
+          appliedParts.push(`Hub: ${matchedHub}`);
+        }
+      }
+
+      // 4. Workplace Model (Remote / Hybrid / On-site)
+      const remoteVal = data.workplace_model || data.workplace_models || data.workplaceModel;
+      if (remoteVal) {
+        const models = Array.isArray(remoteVal) ? remoteVal : [remoteVal];
+        const validModels: string[] = [];
+        for (const m of models) {
+          const lower = String(m).toLowerCase();
+          if (lower.includes('remote')) validModels.push('Remote');
+          else if (lower.includes('hybrid')) validModels.push('Hybrid');
+          else if (lower.includes('on-site') || lower.includes('onsite') || lower.includes('office')) validModels.push('On-site');
+        }
+        if (validModels.length > 0) {
+          updatedFilters.workplaceModels = Array.from(new Set(validModels));
+          appliedParts.push(`Mode: ${validModels.join(', ')}`);
+        }
+      }
+
+      // 5. Experience Level (Entry / Mid / Senior / Lead)
+      const expVal = data.experience_level || data.experience_levels || data.experienceLevel;
+      if (expVal) {
+        const exps = Array.isArray(expVal) ? expVal : [expVal];
+        const validExps: string[] = [];
+        for (const e of exps) {
+          const lower = String(e).toLowerCase();
+          if (lower.includes('entry') || lower.includes('junior') || lower.includes('intern') || lower.includes('fresher')) validExps.push('Entry');
+          else if (lower.includes('mid') || lower.includes('associate')) validExps.push('Mid');
+          else if (lower.includes('senior') || lower.includes('sr')) validExps.push('Senior');
+          else if (lower.includes('lead') || lower.includes('staff') || lower.includes('principal')) validExps.push('Lead');
+        }
+        if (validExps.length > 0) {
+          updatedFilters.experienceLevels = Array.from(new Set(validExps));
+          appliedParts.push(`Exp: ${validExps.join(', ')}`);
+        }
+      }
+
+      // 6. Min Salary
+      const salaryLPA = data.min_salary_lpa ?? data.min_salary;
+      if (typeof salaryLPA === 'number' && salaryLPA > 0) {
+        updatedFilters.minSalaryLPA = salaryLPA;
+        appliedParts.push(`Min: ${salaryLPA} LPA`);
+      }
+
+      // Apply the structured filters
+      onFilterChange(updatedFilters);
+
+      const summary =
+        data.summary ||
+        (appliedParts.length > 0
+          ? appliedParts.join(' • ')
+          : `Extracted parameters for "${query}"`);
+
+      setAiExpandedInfo({
+        query,
+        summary,
+        originalFilters: { ...filters },
+      });
+    } catch (err) {
+      console.warn('[AI Search] Network or parsing error, falling back to standard keyword search', err);
+      onFilterChange({ ...filters, searchQuery: query });
+    } finally {
+      setIsAiSearching(false);
+    }
+  };
+
+  const handleResetAiExpansion = () => {
+    if (aiExpandedInfo?.originalFilters) {
+      onFilterChange(aiExpandedInfo.originalFilters);
+      setLocalSearch(aiExpandedInfo.originalFilters.searchQuery);
+    } else {
+      onReset();
+    }
+    setAiExpandedInfo(null);
+  };
 
   React.useEffect(() => {
     setLocalSearch(filters.searchQuery);
@@ -109,35 +253,66 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     <div className="flex flex-col gap-2.5 sm:gap-3 rounded-xl border border-zinc-200 bg-white p-3 sm:p-3.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/90">
       {/* Connected Search & Filter Unit */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center">
-        {/* Search input with integrated mobile filter trigger */}
+        {/* Search input with integrated mobile filter trigger & AI Search */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400 dark:text-zinc-500" />
           <input
             type="text"
-            placeholder="Search role, skills, or company..."
+            placeholder="Search role, skills, or try AI search (e.g. 'Remote Senior React in Bengaluru')..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full rounded-lg border border-zinc-200 bg-zinc-50/50 py-2 pl-9 pr-11 text-xs font-medium text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus:border-blue-400 sm:pr-3"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAiSearch();
+              }
+            }}
+            className="w-full rounded-lg border border-zinc-200 bg-zinc-50/50 py-2 pl-9 pr-28 sm:pr-32 text-xs font-medium text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus:border-blue-400"
           />
 
-          {/* Embedded Mobile Filter Expand Toggle */}
-          <button
-            onClick={() => setIsMobileExpanded((prev) => !prev)}
-            className={`absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-md border text-xs font-semibold sm:hidden transition ${
-              isMobileExpanded || activeFiltersCount > 0
-                ? 'border-blue-500 bg-blue-50 text-blue-600 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400'
-                : 'border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-700 dark:text-zinc-300'
-            }`}
-            title="Toggle filters"
-            aria-label="Toggle filters"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 text-[9px] font-bold text-white">
-                {activeFiltersCount}
+          {/* Action buttons inside search bar: AI Search + Mobile Filter Toggle */}
+          <div className="absolute right-1.5 top-1.5 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleAiSearch}
+              disabled={isAiSearching || !localSearch.trim()}
+              className={`flex h-7 items-center gap-1 px-2 rounded-md border text-[11px] font-semibold transition ${
+                localSearch.trim()
+                  ? 'border-violet-300 bg-gradient-to-r from-violet-50 to-indigo-50 text-violet-700 hover:from-violet-100 hover:to-indigo-100 dark:border-violet-800/80 dark:bg-gradient-to-r dark:from-violet-950/60 dark:to-indigo-950/60 dark:text-violet-300 dark:hover:from-violet-900/80 dark:hover:to-indigo-900/80 shadow-xs'
+                  : 'border-zinc-200 bg-zinc-100/70 text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500 cursor-not-allowed opacity-60'
+              }`}
+              title="AI Search: Extract role, location, remote, and experience filters"
+              aria-label="AI Search"
+            >
+              {isAiSearching ? (
+                <Loader2 className="h-3 w-3 animate-spin text-violet-600 dark:text-violet-400" />
+              ) : (
+                <Sparkles className="h-3 w-3 text-violet-600 dark:text-violet-400" />
+              )}
+              <span className="hidden min-[420px]:inline">
+                {isAiSearching ? 'Expanding...' : 'AI Search'}
               </span>
-            )}
-          </button>
+            </button>
+
+            {/* Embedded Mobile Filter Expand Toggle */}
+            <button
+              onClick={() => setIsMobileExpanded((prev) => !prev)}
+              className={`flex h-7 w-7 items-center justify-center rounded-md border text-xs font-semibold sm:hidden transition ${
+                isMobileExpanded || activeFiltersCount > 0
+                  ? 'border-blue-500 bg-blue-50 text-blue-600 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-400'
+                  : 'border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-700 dark:text-zinc-300'
+              }`}
+              title="Toggle filters"
+              aria-label="Toggle filters"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              {activeFiltersCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 text-[9px] font-bold text-white">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* City Filter */}
@@ -181,7 +356,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {/* Reset button */}
         <div className={`w-full md:w-auto shrink-0 ${isMobileExpanded ? 'flex' : 'hidden sm:flex'}`}>
           <button
-            onClick={onReset}
+            onClick={() => {
+              setAiExpandedInfo(null);
+              onReset();
+            }}
             className="flex w-full md:w-auto items-center justify-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-100 py-2 px-3 text-xs font-medium text-zinc-600 transition hover:bg-zinc-200 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -189,6 +367,27 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </button>
         </div>
       </div>
+
+      {/* 🔮 AI Expanded Filter Badge */}
+      {aiExpandedInfo && (
+        <div className="flex items-center justify-between rounded-lg border border-violet-200 bg-gradient-to-r from-violet-50/90 to-indigo-50/80 px-3 py-1.5 text-xs text-violet-900 dark:border-violet-900/60 dark:bg-gradient-to-r dark:from-violet-950/40 dark:to-indigo-950/40 dark:text-violet-200 animate-in fade-in">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <Sparkles className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400 shrink-0" />
+            <div className="truncate">
+              <span className="font-semibold text-violet-700 dark:text-violet-300">AI Expanded:</span>{' '}
+              <span className="text-zinc-700 dark:text-zinc-300">{aiExpandedInfo.summary}</span>
+            </div>
+          </div>
+          <button
+            onClick={handleResetAiExpansion}
+            className="flex items-center gap-1 shrink-0 rounded px-2 py-0.5 text-[11px] font-semibold text-violet-700 hover:bg-violet-100 dark:text-violet-300 dark:hover:bg-violet-900/60 transition"
+            title="Reset AI search filters"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span>Reset AI</span>
+          </button>
+        </div>
+      )}
 
       {/* 📍 Detected Indian Postal PIN Code Badge */}
       {(detectedPinInfo || isLookingUpPin) && (
