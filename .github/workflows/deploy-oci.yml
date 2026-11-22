@@ -58,9 +58,9 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_KEY }}
           ARGS: "-rlgoDzvc -i --delete"
           SOURCE: "web/.next/standalone/"
-          REMOTE_HOST: "130.210.87.33"
-          REMOTE_USER: "ubuntu"
-          TARGET: "/var/www/mapmycareer"
+          REMOTE_HOST: ${{ secrets.OCI_HOST }}
+          REMOTE_USER: ${{ secrets.OCI_USER || 'ubuntu' }}
+          TARGET: ${{ secrets.OCI_APP_DIR || '/var/www/mapmycareer' }}
           SCRIPT_AFTER: |
             sudo systemctl restart mapmycareer.service
             sudo systemctl status mapmycareer.service --no-pager

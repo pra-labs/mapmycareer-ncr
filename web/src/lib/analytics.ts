@@ -3,11 +3,13 @@
  * Safe client-side tracking with PII stripping and null checks.
  */
 
+export type AnalyticsEventPayload = Record<string, string | number | boolean | null | undefined>;
+
 // Global Umami type definition for window
 declare global {
   interface Window {
     umami?: {
-      track: (eventName: string, eventData?: Record<string, any>) => void;
+      track: (eventName: string, eventData?: Record<string, unknown>) => void;
     };
   }
 }
@@ -37,8 +39,8 @@ function sanitizeValue(val: unknown): unknown {
     return val.map(sanitizeValue);
   }
   if (val !== null && typeof val === 'object') {
-    const sanitizedObj: Record<string, any> = {};
-    for (const [k, v] of Object.entries(val)) {
+    const sanitizedObj: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
       // Omit known sensitive keys entirely
       if (/password|secret|token|credential|auth/i.test(k)) {
         continue;
@@ -53,9 +55,9 @@ function sanitizeValue(val: unknown): unknown {
 /**
  * Strips PII and sensitive tokens from payload data dictionary.
  */
-export function sanitizePayload(payload?: Record<string, any>): Record<string, any> | undefined {
+export function sanitizePayload(payload?: Record<string, unknown>): Record<string, unknown> | undefined {
   if (!payload) return undefined;
-  const clean: Record<string, any> = {};
+  const clean: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(payload)) {
     if (/password|secret|token|credential|auth/i.test(key)) {
       continue;
@@ -68,13 +70,14 @@ export function sanitizePayload(payload?: Record<string, any>): Record<string, a
 /**
  * Track custom events in Umami analytics safely.
  */
-export function trackEvent(name: AnalyticsEventName, payload?: Record<string, any>): void {
+export function trackEvent(name: AnalyticsEventName, payload?: Record<string, unknown>): void {
   if (typeof window === 'undefined') return;
 
   try {
     const cleanPayload = sanitizePayload(payload);
-    if (typeof (window as any).umami?.track === 'function') {
-      (window as any).umami.track(name, cleanPayload);
+    const umamiInstance = window.umami;
+    if (umamiInstance && typeof umamiInstance.track === 'function') {
+      umamiInstance.track(name, cleanPayload);
     }
   } catch (err) {
     // Silently handle any telemetry failures to avoid breaking UX
