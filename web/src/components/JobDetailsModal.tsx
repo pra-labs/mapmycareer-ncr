@@ -123,6 +123,22 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
     if (originLat !== null && originLon !== null) {
       const est = estimateCommute(originLat, originLon, job.lat, job.lon);
       setCommuteEstimate(est);
+
+      // Track coarse distance bucket telemetry (privacy-first: zero coordinates logged)
+      const distanceBucket: '< 10 km' | '10-25 km' | '> 25 km' =
+        est.roadDistanceKm < 10
+          ? '< 10 km'
+          : est.roadDistanceKm <= 25
+          ? '10-25 km'
+          : '> 25 km';
+
+      const hubName = userLocation ? 'GPS Location' : (POPULAR_INDIAN_TRANSIT_HUBS.find((h) => h.id === selectedTransitHubId)?.name || selectedTransitHubId);
+
+      trackEvent('commute_calculator_used', {
+        distance_bucket: distanceBucket,
+        transport_mode: 'transit_and_drive',
+        hub: hubName,
+      });
     } else {
       setCommuteEstimate(null);
     }

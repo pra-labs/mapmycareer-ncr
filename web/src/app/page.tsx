@@ -19,7 +19,8 @@ import { CorridorFaqSection } from '../components/CorridorFaqSection';
 import { CorridorFaqModal } from '../components/CorridorFaqModal';
 import { DevProfileAuditorModal } from '../components/DevProfileAuditorModal';
 import { AtsBulletOptimizerModal } from '../components/AtsBulletOptimizerModal';
-import { Loader2, AlertCircle, List, Map as MapIcon, Target, Sparkles, X } from 'lucide-react';
+import { TalentAlertsModal } from '../components/TalentAlertsModal';
+import { Loader2, AlertCircle, List, Map as MapIcon, Target, Sparkles, X, BellRing } from 'lucide-react';
 
 export default function Home() {
   const [allJobs, setAllJobs] = useState<Job[]>([]);
@@ -62,6 +63,7 @@ export default function Home() {
   const [isResumeMatcherOpen, setIsResumeMatcherOpen] = useState<boolean>(false);
   const [isBulletOptimizerOpen, setIsBulletOptimizerOpen] = useState<boolean>(false);
   const [bulletOptimizerRole, setBulletOptimizerRole] = useState<string | undefined>(undefined);
+  const [isTalentAlertsOpen, setIsTalentAlertsOpen] = useState<boolean>(false);
   const [activeResumeProfile, setActiveResumeProfile] = useState<CandidateProfile | null>(null);
   const [matchThreshold, setMatchThreshold] = useState<number>(35);
   const [activeJobContext, setActiveJobContext] = useState<{
@@ -307,6 +309,7 @@ export default function Home() {
           setBulletOptimizerRole(undefined);
           setIsBulletOptimizerOpen(true);
         }}
+        onOpenTalentAlerts={() => setIsTalentAlertsOpen(true)}
         onScrollToInsights={handleScrollToInsights}
         onOpenFaqModal={() => setIsFaqModalOpen(true)}
       />
@@ -383,16 +386,23 @@ export default function Home() {
                 <h3 className="mt-2 text-sm font-bold text-zinc-800 dark:text-white">
                   No matching jobs found
                 </h3>
-                <p className="mt-1 text-xs text-zinc-500">
+                <p className="mt-1 text-xs text-zinc-500 max-w-sm">
                   {activeResumeProfile
                     ? 'Try lowering the minimum match threshold in the Resume Matcher or clearing some search filters.'
-                    : 'Try relaxing your salary or experience filters to see more opportunities.'}
+                    : "Can't find your role? Get notified when new matching roles drop."}
                 </p>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    onClick={() => setIsTalentAlertsOpen(true)}
+                    className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition"
+                  >
+                    <BellRing className="h-3.5 w-3.5" />
+                    <span>Join Hiring Radar / Get Job Alerts</span>
+                  </button>
                   {activeResumeProfile && (
                     <button
                       onClick={() => setIsResumeMatcherOpen(true)}
-                      className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                      className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700 dark:bg-zinc-700 dark:hover:bg-zinc-600"
                     >
                       Adjust Threshold
                     </button>
@@ -614,6 +624,14 @@ export default function Home() {
         isOpen={isBulletOptimizerOpen}
         onClose={() => setIsBulletOptimizerOpen(false)}
         targetRole={bulletOptimizerRole}
+      />
+
+      {/* Voluntary DPDP-Compliant Talent Radar & Alerts Modal */}
+      <TalentAlertsModal
+        isOpen={isTalentAlertsOpen}
+        onClose={() => setIsTalentAlertsOpen(false)}
+        defaultRole={filters.searchQuery || (activeResumeProfile ? activeResumeProfile.detectedTrack : '')}
+        defaultCity={filters.selectedCity !== 'All Cities' ? filters.selectedCity : 'All Cities (Pan-India)'}
       />
     </div>
   );

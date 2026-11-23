@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Layers, FileCode2, Zap, MailCheck, BookOpen, Target, Award, Sparkles } from 'lucide-react';
+import { Compass, Layers, FileCode2, Zap, MailCheck, BookOpen, Target, Award, Sparkles, BellRing } from 'lucide-react';
 
 interface HeaderProps {
   totalJobs: number;
@@ -13,6 +13,7 @@ interface HeaderProps {
   onScrollToInsights?: () => void;
   onOpenFaqModal?: () => void;
   onOpenAtsBulletOptimizer?: () => void;
+  onOpenTalentAlerts?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   onScrollToInsights,
   onOpenFaqModal,
   onOpenAtsBulletOptimizer,
+  onOpenTalentAlerts,
 }) => {
   const [isToolsOpen, setIsToolsOpen] = React.useState(false);
   const toolsRef = React.useRef<HTMLDivElement>(null);
@@ -64,6 +66,19 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2.5">
+        {/* Voluntary Talent Radar & Job Alerts Action */}
+        {onOpenTalentAlerts && (
+          <button
+            onClick={onOpenTalentAlerts}
+            className="flex items-center gap-1.5 rounded-lg border border-blue-200/80 bg-blue-50/70 px-2.5 py-1.5 min-h-[36px] text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50"
+            title="Join voluntary talent radar to get alerted on high-signal matching drops"
+          >
+            <BellRing className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">Join Hiring Radar</span>
+            <span className="sm:hidden">Radar</span>
+          </button>
+        )}
+
         {/* Primary Match Resume Action */}
         <button
           onClick={onOpenResumeMatcher}
@@ -111,6 +126,24 @@ export const Header: React.FC<HeaderProps> = ({
                 CareerForge Suite
               </div>
               <div className="space-y-0.5">
+                {onOpenTalentAlerts && (
+                  <button
+                    onClick={() => {
+                      onOpenTalentAlerts();
+                      setIsToolsOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-blue-950 hover:bg-blue-50/90 dark:text-blue-300 dark:hover:bg-blue-950/40 text-left transition"
+                  >
+                    <BellRing className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                        <span>Hiring Radar & Alerts</span>
+                        <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">DPDP</span>
+                      </div>
+                      <div className="text-[10px] text-zinc-600 dark:text-zinc-400">Opt-in private job alert drops</div>
+                    </div>
+                  </button>
+                )}
                 {triggerFaq && (
                   <button
                     onClick={() => {

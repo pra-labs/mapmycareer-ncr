@@ -16,6 +16,8 @@ declare global {
 
 export type AnalyticsEventName =
   | 'job_search_filter'
+  | 'search_zero_results'
+  | 'commute_calculator_used'
   | 'map_pin_select'
   | 'job_detail_open'
   | 'job_apply_outbound'
@@ -27,6 +29,32 @@ export type AnalyticsEventName =
 const SENSITIVE_PARAM_REGEX = /(token|auth|key|secret|password|access_token|refresh_token|id_token|session|bearer)=([^&]+)/gi;
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const PHONE_REGEX = /(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\d{5}[-.\s]?\d{5})/g;
+
+// Known job boards and ATS domains whose job IDs and URL paths should not be redacted as phone numbers
+const KNOWN_ATS_DOMAINS = [
+  'greenhouse.io',
+  'lever.co',
+  'naukri.com',
+  'workday',
+  'datadoghq.com',
+  'coinbase.com',
+];
+
+/**
+ * Checks if a string represents an HTTP/HTTPS URL on a known ATS or job board domain.
+ */
+function isAtsUrl(val: string): boolean {
+  if (!val.startsWith('http://') && !val.startsWith('https://')) {
+    return false;
+  }
+  try {
+    const url = new URL(val);
+    const hostname = url.hostname.toLowerCase();
+    return KNOWN_ATS_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`) || hostname.includes(domain));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Normalizes search queries to prevent high-cardinality noise in Umami telemetry.
@@ -47,10 +75,14 @@ export function normalizeSearchQuery(query: unknown): string | undefined {
  */
 function sanitizeValue(val: unknown, key?: string): unknown {
   if (typeof val === 'string') {
-    const sanitized = val
+    let sanitized = val
       .replace(SENSITIVE_PARAM_REGEX, '$1=[REDACTED]')
-      .replace(EMAIL_REGEX, '[EMAIL_REDACTED]')
-      .replace(PHONE_REGEX, '[PHONE_REDACTED]');
+      .replace(EMAIL_REGEX, '[EMAIL_REDACTED]');
+
+    // Do not redact numeric IDs as phone numbers if the string is a URL on known ATS/job board domains
+    if (!isAtsUrl(val)) {
+      sanitized = sanitized.replace(PHONE_REGEX, '[PHONE_REDACTED]');
+    }
 
     // Normalize search queries if key is search_query or query
     if (key === 'search_query' || key === 'query') {

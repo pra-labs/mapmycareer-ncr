@@ -60,6 +60,36 @@ describe('analytics lib', () => {
       expect(sanitized?.regular_field).toBe('valid value');
     });
 
+    it('preserves job IDs in URLs for known ATS and job boards without phone redaction', () => {
+      const payload = {
+        greenhouse_url: 'https://job-boards.greenhouse.io/verkada/jobs/5300741007',
+        lever_url: 'https://jobs.lever.co/company/1234567890',
+        naukri_url: 'https://www.naukri.com/job-listings-custom-engineer-200826918563',
+        workday_url: 'https://company.myworkdayjobs.com/careers/job/1023456789',
+        datadog_url: 'https://datadoghq.com/careers/detail/?gh_jid=9876543210',
+        coinbase_url: 'https://coinbase.com/careers/positions/1234567890',
+        other_text: 'Contact recruiter at +91 9876543210 for details',
+      };
+
+      const sanitized = sanitizePayload(payload);
+      expect(sanitized).toBeDefined();
+      expect(sanitized?.greenhouse_url).toBe('https://job-boards.greenhouse.io/verkada/jobs/5300741007');
+      expect(sanitized?.lever_url).toBe('https://jobs.lever.co/company/1234567890');
+      expect(sanitized?.naukri_url).toBe('https://www.naukri.com/job-listings-custom-engineer-200826918563');
+      expect(sanitized?.workday_url).toBe('https://company.myworkdayjobs.com/careers/job/1023456789');
+      expect(sanitized?.datadog_url).toBe('https://datadoghq.com/careers/detail/?gh_jid=9876543210');
+      expect(sanitized?.coinbase_url).toBe('https://coinbase.com/careers/positions/1234567890');
+      expect(sanitized?.other_text).toBe('Contact recruiter at [PHONE_REDACTED] for details');
+    });
+
+    it('redacts sensitive query tokens even on ATS URLs', () => {
+      const payload = {
+        apply_url: 'https://job-boards.greenhouse.io/verkada/jobs/5300741007?token=secret123&utm_source=board',
+      };
+      const sanitized = sanitizePayload(payload);
+      expect(sanitized?.apply_url).toBe('https://job-boards.greenhouse.io/verkada/jobs/5300741007?token=[REDACTED]&utm_source=board');
+    });
+
     it('normalizes search_query keys within payloads to clean Umami metrics', () => {
       const payload = {
         search_query: '  Senior   GOLANG   Developer in Gurugram   ',
@@ -120,6 +150,42 @@ describe('analytics lib', () => {
         feature: 'ats_bullet',
         status: 'success',
         latency_ms: 245,
+      });
+    });
+
+    it('tracks search_zero_results event', () => {
+      const mockTrack = vi.fn();
+      window.umami = { track: mockTrack };
+
+      trackEvent('search_zero_results', {
+        query: 'quantum computing engineer',
+        city: 'Delhi NCR',
+        hub: 'Cyber City',
+        notice_period: 'Immediate',
+      });
+
+      expect(mockTrack).toHaveBeenCalledWith('search_zero_results', {
+        query: 'quantum computing engineer',
+        city: 'Delhi NCR',
+        hub: 'Cyber City',
+        notice_period: 'Immediate',
+      });
+    });
+
+    it('tracks commute_calculator_used event with coarse distance bucket', () => {
+      const mockTrack = vi.fn();
+      window.umami = { track: mockTrack };
+
+      trackEvent('commute_calculator_used', {
+        distance_bucket: '10-25 km',
+        transport_mode: 'transit_and_drive',
+        hub: 'Cyber City Rapid Metro (Gurugram)',
+      });
+
+      expect(mockTrack).toHaveBeenCalledWith('commute_calculator_used', {
+        distance_bucket: '10-25 km',
+        transport_mode: 'transit_and_drive',
+        hub: 'Cyber City Rapid Metro (Gurugram)',
       });
     });
   });
