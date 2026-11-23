@@ -183,7 +183,16 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
         if (response.status === 429) {
           throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
         }
-        throw new Error(`Edge AI returned status ${response.status}`);
+        let serverErrorMsg = '';
+        try {
+          const errJson = await response.json();
+          if (errJson && errJson.error) {
+            serverErrorMsg = errJson.error;
+          }
+        } catch {
+          // Ignore JSON parse errors on non-OK responses
+        }
+        throw new Error(serverErrorMsg || `Edge AI returned status ${response.status}`);
       }
 
       if (!response.body) {
