@@ -27,6 +27,7 @@ export default function Home() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [hoveredJob, setHoveredJob] = useState<Job | null>(null);
   const [modalJob, setModalJob] = useState<Job | null>(null);
+  const [resetViewSignal, setResetViewSignal] = useState(0);
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
 
   // Resizable Split Pane State
@@ -218,6 +219,10 @@ export default function Home() {
       noticePeriod: 'Any',
       showSavedOnly: false,
     });
+    setResetViewSignal((prev) => prev + 1);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('resetMapView'));
+    }
   };
 
   // Job Modal Action Handlers
@@ -475,6 +480,15 @@ export default function Home() {
               jobs={filteredJobs}
               selectedJob={selectedJob}
               hoveredJob={hoveredJob}
+              resetViewSignal={resetViewSignal}
+              selectedCity={filters.selectedCity}
+              onCitySelect={(cityName) => {
+                setFilters((prev) => ({
+                  ...prev,
+                  selectedCity: cityName,
+                  selectedHub: 'All Hubs',
+                }));
+              }}
               onSelectJob={(j) => {
                 trackEvent('job_detail_open', {
                   job_id: j.id,

@@ -10,6 +10,9 @@ interface MapViewProps {
   selectedJob: Job | null;
   hoveredJob: Job | null;
   onSelectJob: (job: Job) => void;
+  resetViewSignal?: number;
+  selectedCity?: string;
+  onCitySelect?: (cityName: string) => void;
 }
 
 // Dynamically import Leaflet map with SSR turned off

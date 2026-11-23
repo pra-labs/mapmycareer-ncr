@@ -15,6 +15,9 @@ interface MapViewInnerProps {
   selectedJob: Job | null;
   hoveredJob: Job | null;
   onSelectJob: (job: Job) => void;
+  resetViewSignal?: number;
+  selectedCity?: string;
+  onCitySelect?: (cityName: string) => void;
 }
 
 // ─── Company cluster type ────────────────────────────────────────────────────
@@ -170,12 +173,22 @@ function MapController({
   selectedJob,
   hoveredJob,
   onBoundsChange,
+  resetViewSignal,
 }: {
   selectedJob: Job | null;
   hoveredJob: Job | null;
   onBoundsChange: (bounds: L.LatLngBounds, zoom?: number) => void;
+  resetViewSignal?: number;
 }) {
   const map = useMap();
+
+  // Handle explicit resetViewSignal from parent filter reset
+  useEffect(() => {
+    if (resetViewSignal && resetViewSignal > 0) {
+      map.setView([28.5355, 77.3910], 11, { animate: true });
+      onBoundsChange(map.getBounds(), 11);
+    }
+  }, [resetViewSignal, map, onBoundsChange]);
 
   // Invalidate size on mount, resize, tab switch, and container size changes
   useEffect(() => {
@@ -252,9 +265,19 @@ function MapController({
         map.flyTo([lat, lon], zoom || 11, { duration: 0.6 });
       }
     };
+
+    const handleResetMapView = () => {
+      map.setView([28.5355, 77.3910], 11, { animate: true });
+      onBoundsChange(map.getBounds(), 11);
+    };
+
     window.addEventListener('flyTo', handleFlyTo);
-    return () => window.removeEventListener('flyTo', handleFlyTo);
-  }, [map]);
+    window.addEventListener('resetMapView', handleResetMapView);
+    return () => {
+      window.removeEventListener('flyTo', handleFlyTo);
+      window.removeEventListener('resetMapView', handleResetMapView);
+    };
+  }, [map, onBoundsChange]);
 
   return null;
 }
@@ -522,6 +545,9 @@ export const MapViewInner: React.FC<MapViewInnerProps> = ({
   selectedJob,
   hoveredJob,
   onSelectJob,
+  resetViewSignal,
+  selectedCity,
+  onCitySelect,
 }) => {
   // Build company clusters from filtered jobs
   const companyClusters = useMemo(() => buildCompanyClusters(jobs), [jobs]);
@@ -601,6 +627,7 @@ export const MapViewInner: React.FC<MapViewInnerProps> = ({
           selectedJob={selectedJob}
           hoveredJob={hoveredJob}
           onBoundsChange={handleBoundsChange}
+          resetViewSignal={resetViewSignal}
         />
 
         <SuperclusterRenderer
@@ -655,28 +682,46 @@ export const MapViewInner: React.FC<MapViewInnerProps> = ({
         className="absolute top-3 left-3 right-3 z-10 flex items-center gap-1.5 overflow-x-auto rounded-xl border border-white/20 bg-slate-900/80 py-1.5 pl-3 pr-8 shadow-lg backdrop-blur-md [&::-webkit-scrollbar]:hidden dark:border-zinc-800 dark:bg-zinc-950/85"
       >
         {[
-          { name: 'NCR',       coords: [28.5355, 77.3910] },
-          { name: 'Bengaluru', coords: [12.9716, 77.5946] },
-          { name: 'Hyderabad', coords: [17.3850, 78.4867] },
-          { name: 'Pune',      coords: [18.5204, 73.8567] },
-          { name: 'Mumbai',    coords: [19.0760, 72.8777] },
-          { name: 'Chennai',   coords: [13.0827, 80.2707] },
-          { name: 'Kolkata',   coords: [22.5726, 88.3639] },
-          { name: 'GIFT City', coords: [23.1600, 72.6845] },
-          { name: 'Kochi',     coords: [9.9312,  76.2673] },
-        ].map((city) => (
-          <button
-            key={city.name}
-            onClick={() =>
-              window.dispatchEvent(
-                new CustomEvent('flyTo', { detail: { lat: city.coords[0], lon: city.coords[1], zoom: 11 } })
-              )
-            }
-            className="whitespace-nowrap shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold text-zinc-200 transition hover:bg-white/20 hover:text-white dark:text-zinc-300 dark:hover:bg-white/10"
-          >
-            {city.name}
-          </button>
-        ))}
+          { name: 'All India', coords: [20.5937, 78.9629], zoom: 5,  filterCity: 'All Cities' },
+          { name: 'NCR',       coords: [28.5355, 77.3910], zoom: 11, filterCity: 'Delhi' },
+          { name: 'Bengaluru', coords: [12.9716, 77.5946], zoom: 11, filterCity: 'Bengaluru' },
+          { name: 'Hyderabad', coords: [17.3850, 78.4867], zoom: 11, filterCity: 'Hyderabad' },
+          { name: 'Pune',      coords: [18.5204, 73.8567], zoom: 11, filterCity: 'Pune' },
+          { name: 'Mumbai',    coords: [19.0760, 72.8777], zoom: 11, filterCity: 'Mumbai' },
+          { name: 'Chennai',   coords: [13.0827, 80.2707], zoom: 11, filterCity: 'Chennai' },
+          { name: 'Kolkata',   coords: [22.5726, 88.3639], zoom: 11, filterCity: 'Kolkata' },
+          { name: 'GIFT City', coords: [23.1600, 72.6845], zoom: 12, filterCity: 'Ahmedabad' },
+          { name: 'Kochi',     coords: [9.9312,  76.2673], zoom: 11, filterCity: 'Kochi' },
+        ].map((city) => {
+          const isSelected = selectedCity
+            ? (city.filterCity === 'All Cities' && selectedCity === 'All Cities') ||
+              (city.name === 'NCR' && ['Delhi', 'Gurugram', 'Noida'].includes(selectedCity)) ||
+              (city.filterCity !== 'All Cities' && selectedCity.toLowerCase() === city.filterCity.toLowerCase())
+            : false;
+
+          return (
+            <button
+              key={city.name}
+              onClick={() => {
+                window.dispatchEvent(
+                  new CustomEvent('flyTo', {
+                    detail: { lat: city.coords[0], lon: city.coords[1], zoom: city.zoom ?? 11 },
+                  })
+                );
+                if (onCitySelect) {
+                  onCitySelect(city.filterCity);
+                }
+              }}
+              className={`whitespace-nowrap shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold transition ${
+                isSelected
+                  ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-400/50'
+                  : 'text-zinc-200 hover:bg-white/20 hover:text-white dark:text-zinc-300 dark:hover:bg-white/10'
+              }`}
+            >
+              {city.name}
+            </button>
+          );
+        })}
       </div>
 
       {/* Level Legend Pill positioned cleanly above bottom footer */}
