@@ -53,6 +53,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     if (!query || isAiSearching) return;
 
     setIsAiSearching(true);
+    const startTime = performance.now();
 
     try {
       const res = await fetch('/api/job-assistant', {
@@ -61,8 +62,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         body: JSON.stringify({ mode: 'nl_search', input: query, query }),
       });
 
+      const latencyMs = Math.round(performance.now() - startTime);
+
       if (!res.ok) {
         // Fallback gracefully to standard keyword search on 429 or any non-OK status
+        const status = res.status === 429 ? 'rate_limited' : 'error';
+        trackEvent('ai_assistant_used', {
+          feature: 'nl_search',
+          status,
+          latency_ms: latencyMs,
+        });
         console.warn(`[AI Search] Server status ${res.status}. Falling back to standard keyword search.`);
         onFilterChange({ ...filters, searchQuery: query });
         setIsAiSearching(false);
@@ -70,7 +79,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       }
 
       const data = await res.json();
-      trackEvent('ai_assistant_used', { feature: 'nl_search' });
+      trackEvent('ai_assistant_used', {
+        feature: 'nl_search',
+        status: 'success',
+        latency_ms: latencyMs,
+      });
 
       const updatedFilters: FilterState = { ...filters };
       const appliedParts: string[] = [];
@@ -177,7 +190,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         summary,
         originalFilters: { ...filters },
       });
-    } catch (err) {
+    } catch (err: unknown) {
+      const latencyMs = Math.round(performance.now() - startTime);
+      const isTimeout = (err as Error)?.name === 'AbortError' || (err as Error)?.name === 'TimeoutError';
+      trackEvent('ai_assistant_used', {
+        feature: 'nl_search',
+        status: isTimeout ? 'timeout' : 'error',
+        latency_ms: latencyMs,
+      });
       console.warn('[AI Search] Network or parsing error, falling back to standard keyword search', err);
       onFilterChange({ ...filters, searchQuery: query });
     } finally {

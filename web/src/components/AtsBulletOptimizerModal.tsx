@@ -149,6 +149,7 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
     setOptimizedOutput('');
     setError(null);
     setCopied(false);
+    const startTime = performance.now();
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -157,13 +158,6 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
     abortControllerRef.current = controller;
 
     try {
-      // Umami telemetry
-      trackEvent('ai_assistant_used', {
-        feature: 'ats_bullet',
-        length: trimmed.length,
-        has_target_role: Boolean(targetRole),
-      });
-
       const response = await fetch('/api/job-assistant', {
         method: 'POST',
         headers: {
@@ -180,6 +174,14 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
       });
 
       if (!response.ok) {
+        const latencyMs = Math.round(performance.now() - startTime);
+        const status = response.status === 429 ? 'rate_limited' : 'error';
+        trackEvent('ai_assistant_used', {
+          feature: 'ats_bullet',
+          status,
+          latency_ms: latencyMs,
+        });
+
         if (response.status === 429) {
           throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
         }
@@ -268,9 +270,27 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
         }
         setOptimizedOutput(accumulated);
       }
+
+      // Record successful stream completion telemetry
+      const latencyMs = Math.round(performance.now() - startTime);
+      trackEvent('ai_assistant_used', {
+        feature: 'ats_bullet',
+        status: 'success',
+        latency_ms: latencyMs,
+      });
     } catch (err: unknown) {
       if ((err as Error)?.name === 'AbortError') {
         return;
+      }
+      const latencyMs = Math.round(performance.now() - startTime);
+      const isTimeout = (err as Error)?.name === 'TimeoutError';
+      // Only track if not already tracked via response.ok check
+      if (!error) {
+        trackEvent('ai_assistant_used', {
+          feature: 'ats_bullet',
+          status: isTimeout ? 'timeout' : 'error',
+          latency_ms: latencyMs,
+        });
       }
       console.error('[AtsBulletOptimizerModal Error]', err);
       setError((err as Error)?.message || 'Failed to optimize bullet. Please try again.');

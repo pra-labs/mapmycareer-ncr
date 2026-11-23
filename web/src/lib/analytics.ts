@@ -19,34 +19,58 @@ export type AnalyticsEventName =
   | 'map_pin_select'
   | 'job_detail_open'
   | 'job_apply_outbound'
-  | 'ai_assistant_used';
+  | 'ai_assistant_used'
+  | 'resume_matcher_applied'
+  | 'resume_builder_export';
 
 // Sensitive query parameters or tokens to strip from URLs / payloads
 const SENSITIVE_PARAM_REGEX = /(token|auth|key|secret|password|access_token|refresh_token|id_token|session|bearer)=([^&]+)/gi;
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-const PHONE_REGEX = /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
+const PHONE_REGEX = /(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\d{5}[-.\s]?\d{5})/g;
+
+/**
+ * Normalizes search queries to prevent high-cardinality noise in Umami telemetry.
+ * Lowercases, collapses whitespace, trims, and truncates to max 60 chars.
+ */
+export function normalizeSearchQuery(query: unknown): string | undefined {
+  if (typeof query !== 'string') return undefined;
+  const cleaned = query
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+  return cleaned || undefined;
+}
 
 /**
  * Sanitizes input string to ensure no email, phone, or token credentials leak in telemetry.
  */
-function sanitizeValue(val: unknown): unknown {
+function sanitizeValue(val: unknown, key?: string): unknown {
   if (typeof val === 'string') {
-    return val
+    const sanitized = val
       .replace(SENSITIVE_PARAM_REGEX, '$1=[REDACTED]')
       .replace(EMAIL_REGEX, '[EMAIL_REDACTED]')
       .replace(PHONE_REGEX, '[PHONE_REDACTED]');
+
+    // Normalize search queries if key is search_query or query
+    if (key === 'search_query' || key === 'query') {
+      const normalized = normalizeSearchQuery(sanitized);
+      return normalized ?? '';
+    }
+
+    return sanitized;
   }
   if (Array.isArray(val)) {
-    return val.map(sanitizeValue);
+    return val.map((item) => sanitizeValue(item, key));
   }
   if (val !== null && typeof val === 'object') {
     const sanitizedObj: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
-      // Omit known sensitive keys entirely
-      if (/password|secret|token|credential|auth/i.test(k)) {
+      // Omit known sensitive keys entirely (passwords, tokens, resumes, full documents)
+      if (/password|secret|token|credential|auth|resume_text|document_text|raw_resume/i.test(k)) {
         continue;
       }
-      sanitizedObj[k] = sanitizeValue(v);
+      sanitizedObj[k] = sanitizeValue(v, k);
     }
     return sanitizedObj;
   }
@@ -60,10 +84,10 @@ export function sanitizePayload(payload?: Record<string, unknown>): Record<strin
   if (!payload) return undefined;
   const clean: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(payload)) {
-    if (/password|secret|token|credential|auth/i.test(key)) {
+    if (/password|secret|token|credential|auth|resume_text|document_text|raw_resume/i.test(key)) {
       continue;
     }
-    clean[key] = sanitizeValue(value);
+    clean[key] = sanitizeValue(value, key);
   }
   return clean;
 }

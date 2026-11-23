@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Job, CandidateProfile } from '../types/job';
 import { parseResumeFile } from '../lib/resumeParser';
 import { extractCandidateProfile, rankJobsByResume } from '../lib/resumeMatcher';
+import { trackEvent } from '../lib/analytics';
 import {
   X,
   UploadCloud,
@@ -129,13 +130,13 @@ export const ResumeMatcherModal: React.FC<ResumeMatcherModalProps> = ({
   onClose,
   jobs,
   activeProfile,
-  minThreshold: initialThreshold,
+  minThreshold,
   onApplyProfile,
   onClearProfile,
 }) => {
   const [resumeText, setResumeText] = useState<string>(activeProfile?.rawText || SAMPLE_SDET_RESUME);
   const [profile, setProfile] = useState<CandidateProfile | null>(activeProfile);
-  const [threshold, setThreshold] = useState<number>(initialThreshold || 35);
+  const [threshold, setThreshold] = useState<number>(minThreshold || 35);
   const [customSkillInput, setCustomSkillInput] = useState<string>('');
   const [selectedJobId, setSelectedJobId] = useState<number | string | null>(null);
 
@@ -230,6 +231,12 @@ export const ResumeMatcherModal: React.FC<ResumeMatcherModalProps> = ({
 
   const handleApply = () => {
     if (!profile) return;
+    trackEvent('resume_matcher_applied', {
+      threshold,
+      matched_count: previewMatches.length,
+      detected_track: profile?.detectedTrack,
+      seniority: profile?.seniority,
+    });
     onApplyProfile(profile, threshold);
     onClose();
   };

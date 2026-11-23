@@ -21,6 +21,7 @@ import {
 import { parseMarkdownToResumeData, sanitizeResumeData } from '../lib/markdownResumeParser';
 import { renderMarkdownToResumeHtml } from '../lib/markdownResumeRenderer';
 import { exportResumePdf } from '../lib/pdfExporter';
+import { trackEvent } from '../lib/analytics';
 import {
   X,
   FileCode2,
@@ -386,6 +387,8 @@ export const ResumeBuilderModal: React.FC<ResumeBuilderModalProps> = ({
     const printDoc = document.getElementById('resume-print-document');
     if (!printDoc) return;
 
+    trackEvent('resume_builder_export', { format: 'pdf' });
+
     const compiledCss = compileResumeStylesheet(selectedTheme, customCss, selectedTypeface, selectedPalette);
 
     exportResumePdf({
@@ -463,6 +466,13 @@ export const ResumeBuilderModal: React.FC<ResumeBuilderModalProps> = ({
     let content = '';
     let mimeType = 'text/plain';
     const filename = `Resume_${selectedRole.toUpperCase()}.${format}`;
+
+    const analyticsFormatMap: Record<'tex' | 'md' | 'txt', 'latex' | 'markdown' | 'txt'> = {
+      tex: 'latex',
+      md: 'markdown',
+      txt: 'txt',
+    };
+    trackEvent('resume_builder_export', { format: analyticsFormatMap[format] });
 
     if (format === 'tex') {
       content = latexCode;
