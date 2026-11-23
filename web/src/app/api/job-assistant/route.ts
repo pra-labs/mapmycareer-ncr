@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { mode, input, model } = body as Record<string, unknown>;
+    const { mode, input, query: queryParam, model } = body as Record<string, unknown>;
 
     // Validate mode
     if (mode !== 'nl_search' && mode !== 'ats_bullet') {
@@ -64,8 +64,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Accept either 'input' or 'query' parameter
+    const rawInput = typeof input === 'string' ? input : (typeof queryParam === 'string' ? queryParam : '');
+
     // Validate input presence and type
-    if (typeof input !== 'string' || input.trim().length === 0) {
+    if (rawInput.trim().length === 0) {
       return NextResponse.json(
         { error: 'Input parameter is required and must be a non-empty string.' },
         { status: 400 }
@@ -73,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Guardrail: Strict input length cap (max 600 characters)
-    if (input.length > MAX_INPUT_LENGTH) {
+    if (rawInput.length > MAX_INPUT_LENGTH) {
       return NextResponse.json(
         { error: `Input exceeds maximum allowed length of ${MAX_INPUT_LENGTH} characters.` },
         { status: 400 }
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
     // 3. Execution by mode
     if (mode === 'nl_search') {
       try {
-        const result = await processNLSearch(input, modelOverride, req.signal);
+        const result = await processNLSearch(rawInput, modelOverride, req.signal);
         return NextResponse.json(result, { status: 200 });
       } catch (err: unknown) {
         console.error('[job-assistant] nl_search error:', err);

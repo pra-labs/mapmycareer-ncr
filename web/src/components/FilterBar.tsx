@@ -44,7 +44,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       const res = await fetch('/api/job-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'nl_search', query }),
+        body: JSON.stringify({ mode: 'nl_search', input: query, query }),
       });
 
       if (!res.ok) {
@@ -62,13 +62,25 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       const appliedParts: string[] = [];
 
       // 1. Role or extracted search query
-      const extractedRole = data.role || data.search_query || data.query;
-      if (extractedRole && typeof extractedRole === 'string') {
-        updatedFilters.searchQuery = extractedRole;
-        setLocalSearch(extractedRole);
-        appliedParts.push(`Role: "${extractedRole}"`);
+      const rawRole = data.role || data.search_query || data.query || '';
+      let cleanRole = typeof rawRole === 'string' ? rawRole.trim() : '';
+
+      // Strip generic conversational filler words (e.g. "testing role" -> "testing", "developer jobs in gurugram" -> "developer")
+      if (cleanRole) {
+        cleanRole = cleanRole
+          .replace(/\b(in|at|near|for)\s+(gurugram|gurgaon|noida|delhi|bengaluru|bangalore|hyderabad|pune|mumbai)\b/gi, '')
+          .replace(/\b(role|roles|job|jobs|position|positions|opening|openings)\b/gi, '')
+          .trim();
+      }
+
+      if (cleanRole) {
+        updatedFilters.searchQuery = cleanRole;
+        setLocalSearch(cleanRole);
+        appliedParts.push(`Role: "${cleanRole}"`);
       } else {
-        updatedFilters.searchQuery = query;
+        // If query was purely location (e.g. "jobs in gurugram"), clear search query so all jobs in city match
+        updatedFilters.searchQuery = '';
+        setLocalSearch('');
       }
 
       // 2. City
