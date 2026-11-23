@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   X,
   Sparkles,
@@ -10,6 +10,9 @@ import {
   RotateCcw,
   AlertCircle,
   Lightbulb,
+  ArrowRightLeft,
+  Briefcase,
+  TrendingUp,
 } from 'lucide-react';
 import { trackEvent } from '../lib/analytics';
 
@@ -27,6 +30,7 @@ export interface AtsBulletOptimizerModalProps {
   onClose: () => void;
   initialBullet?: string;
   targetRole?: string;
+  targetJob?: string;
 }
 
 export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = ({
@@ -34,14 +38,65 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
   onClose,
   initialBullet = '',
   targetRole,
+  targetJob,
 }) => {
   const [bulletText, setBulletText] = useState<string>(initialBullet);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [optimizedOutput, setOptimizedOutput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const [showDiff, setShowDiff] = useState<boolean>(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const resultEndRef = useRef<HTMLDivElement>(null);
+
+  // Suggested action verbs based on target role or general tech roles
+  const suggestedVerbs = useMemo(() => {
+    const roleLower = (targetRole || '').toLowerCase();
+    if (roleLower.includes('sdet') || roleLower.includes('qa') || roleLower.includes('test')) {
+      return ['Architected', 'Automated', 'Engineered', 'Benchmarked', 'Standardized'];
+    }
+    if (roleLower.includes('frontend') || roleLower.includes('ui') || roleLower.includes('react')) {
+      return ['Spearheaded', 'Optimized', 'Refactored', 'Modernized', 'Redesigned'];
+    }
+    if (roleLower.includes('devops') || roleLower.includes('cloud') || roleLower.includes('sre')) {
+      return ['Containerized', 'Streamlined', 'Provisioned', 'Orchestrated', 'Hardened'];
+    }
+    if (roleLower.includes('data') || roleLower.includes('ml') || roleLower.includes('ai')) {
+      return ['Trained', 'Scaled', 'Fine-tuned', 'Pipeline-engineered', 'Accelerated'];
+    }
+    return ['Architected', 'Engineered', 'Optimized', 'Spearheaded', 'Streamlined'];
+  }, [targetRole]);
+
+  // Suggested quantification prompts
+  const metricPrompts = useMemo(() => {
+    const roleLower = (targetRole || '').toLowerCase();
+    if (roleLower.includes('sdet') || roleLower.includes('qa')) {
+      return [
+        'By what % did test execution time drop?',
+        'How many microservices or API endpoints were covered?',
+        'What was the reduction in regression bug escape rate?',
+      ];
+    }
+    if (roleLower.includes('frontend')) {
+      return [
+        'By what % did First Contentful Paint (FCP) or LCP improve?',
+        'How many monthly active users interacted with the redesigned surface?',
+        'By what % did conversion or retention increase?',
+      ];
+    }
+    if (roleLower.includes('data') || roleLower.includes('ai')) {
+      return [
+        'By what % did model inference latency or compute costs reduce?',
+        'What volume of daily training data or queries were processed?',
+        'By how many percentage points did precision/recall improve?',
+      ];
+    }
+    return [
+      'Quantify your metric: by what % did latency drop?',
+      'How many concurrent users or QPS were supported?',
+      'What was the measured reduction in deployment time or failure rate?',
+    ];
+  }, [targetRole]);
 
   useEffect(() => {
     if (initialBullet) {
@@ -116,8 +171,10 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
         },
         body: JSON.stringify({
           mode: 'ats_bullet',
+          input: trimmed,
           text: trimmed,
           target_role: targetRole || undefined,
+          target_job: targetJob || undefined,
         }),
         signal: controller.signal,
       });
@@ -268,6 +325,56 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
 
         {/* Input Section */}
         <div className="mt-4 space-y-2">
+          {/* Target Role & JD Guidance Pill if present */}
+          {(targetRole || targetJob) && (
+            <div className="flex items-center gap-2 rounded-lg bg-indigo-50/70 p-2 text-xs text-indigo-900 border border-indigo-200/60 dark:bg-indigo-950/40 dark:border-indigo-900/40 dark:text-indigo-200">
+              <Briefcase className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+              <div className="flex-1 truncate">
+                <span className="font-bold">Targeted Alignment: </span>
+                <span>{targetRole || targetJob}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Action Verbs & Quantification Guidance */}
+          <div className="space-y-1.5 rounded-xl border border-zinc-200/80 bg-zinc-50/60 p-2.5 dark:border-zinc-800 dark:bg-zinc-800/30">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+              <TrendingUp className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+              <span>Suggested Action Verbs</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {suggestedVerbs.map((verb) => (
+                <button
+                  key={verb}
+                  type="button"
+                  onClick={() => {
+                    const clean = bulletText.trim();
+                    if (!clean) {
+                      setBulletText(`${verb} `);
+                    } else {
+                      // Prepend or replace leading word
+                      setBulletText(`${verb} ${clean.replace(/^[A-Za-z]+\s*/, '')}`);
+                    }
+                  }}
+                  className="rounded-md border border-violet-200 bg-white px-2 py-0.5 text-[11px] font-medium text-violet-700 hover:bg-violet-50 dark:border-violet-800 dark:bg-zinc-800 dark:text-violet-300 dark:hover:bg-zinc-700"
+                >
+                  + {verb}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+              Quantification Prompts:
+            </div>
+            <div className="flex flex-col gap-1">
+              {metricPrompts.map((prompt, idx) => (
+                <span key={idx} className="text-[11px] text-zinc-600 dark:text-zinc-400">
+                  • {prompt}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
               Original Resume Bullet Point
@@ -385,38 +492,73 @@ export const AtsBulletOptimizerModal: React.FC<AtsBulletOptimizerModalProps> = (
               </div>
 
               {optimizedOutput && (
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="flex items-center gap-1 rounded-md border border-violet-300 bg-white px-2 py-1 text-[11px] font-semibold text-violet-700 shadow-xs transition hover:bg-violet-50 dark:border-violet-800 dark:bg-zinc-800 dark:text-violet-300 dark:hover:bg-zinc-700"
-                  title="Copy to clipboard"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-3 w-3 text-emerald-600" />
-                      <span>Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDiff(!showDiff)}
+                    className="flex items-center gap-1 rounded-md border border-violet-200 bg-white px-2 py-1 text-[11px] font-semibold text-violet-700 shadow-xs transition hover:bg-violet-50 dark:border-violet-800 dark:bg-zinc-800 dark:text-violet-300 dark:hover:bg-zinc-700"
+                    title="Toggle before and after comparison"
+                  >
+                    <ArrowRightLeft className="h-3 w-3" />
+                    <span>{showDiff ? 'Compact' : 'Compare'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="flex items-center gap-1 rounded-md border border-violet-300 bg-white px-2 py-1 text-[11px] font-semibold text-violet-700 shadow-xs transition hover:bg-violet-50 dark:border-violet-800 dark:bg-zinc-800 dark:text-violet-300 dark:hover:bg-zinc-700"
+                    title="Copy to clipboard"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-3 w-3 text-emerald-600" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               )}
             </div>
 
-            {/* Real-time streaming content */}
-            <div className="mt-3 text-xs leading-relaxed text-zinc-900 dark:text-zinc-100 whitespace-pre-wrap font-sans">
-              {optimizedOutput || (
-                <span className="italic text-zinc-400">
-                  Waiting for first token from Edge AI...
-                </span>
-              )}
-              {isStreaming && (
-                <span className="inline-block w-1.5 h-3.5 bg-violet-600 ml-1 animate-pulse align-middle" />
-              )}
-            </div>
+            {/* Before vs After Diff View when completed and enabled */}
+            {optimizedOutput && !isStreaming && showDiff && (
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                <div className="rounded-lg border border-zinc-200 bg-white/80 p-2.5 dark:border-zinc-800 dark:bg-zinc-900/60">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500">
+                    Original Bullet
+                  </span>
+                  <p className="mt-1 text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+                    {bulletText}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/30">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    ATS-Optimized (Google XYZ)
+                  </span>
+                  <p className="mt-1 text-zinc-900 dark:text-zinc-100 font-semibold leading-relaxed font-sans">
+                    {optimizedOutput}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Real-time streaming content or single view */}
+            {(!showDiff || isStreaming) && (
+              <div className="mt-3 text-xs leading-relaxed text-zinc-900 dark:text-zinc-100 whitespace-pre-wrap font-sans">
+                {optimizedOutput || (
+                  <span className="italic text-zinc-400">
+                    Waiting for first token from Edge AI...
+                  </span>
+                )}
+                {isStreaming && (
+                  <span className="inline-block w-1.5 h-3.5 bg-violet-600 ml-1 animate-pulse align-middle" />
+                )}
+              </div>
+            )}
 
             <div ref={resultEndRef} />
           </div>

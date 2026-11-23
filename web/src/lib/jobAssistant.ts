@@ -18,12 +18,18 @@ export interface NLSearchResult {
   location: string;
   remote: boolean;
   query: string;
+  notice_period?: string;
+  urgency?: string;
 }
 
 export interface JobAssistantRequestBody {
   mode: JobAssistantMode;
   input: string;
+  text?: string;
+  query?: string;
   model?: string;
+  target_role?: string;
+  target_job?: string;
 }
 
 export interface RateLimitResult {
@@ -266,15 +272,73 @@ You MUST output ONLY a valid JSON object matching this exact schema:
   "skills": string[],
   "location": string,
   "remote": boolean,
-  "query": string
+  "query": string,
+  "notice_period": string,
+  "urgency": string
 }
 Guidelines:
-- "role": Primary job title or specialization (e.g. "Frontend Engineer", "DevOps Engineer"), or empty string if not specified.
-- "skills": Array of relevant technical or domain skills mentioned (e.g. ["React", "TypeScript", "Next.js"]).
+- "role": Primary job title or specialization (e.g. "Frontend Engineer", "DevOps Engineer", "Software Development Engineer in Test / QA"), or empty string if not specified.
+- "skills": Array of relevant technical or domain skills mentioned. Standardize technical synonyms:
+  * "GenAI", "LLM", "Prompt Engineering" -> map/include "Artificial Intelligence / Machine Learning" (or "AI", "LLM")
+  * "Frontend" -> map/include "React / Web Development" (or "React", "Frontend")
+  * "QA", "Testing", "Automation" -> map/include "Software Development Engineer in Test / QA" (or "SDET", "QA")
 - "location": City or sub-region (e.g. "Noida", "Gurugram", "Delhi", "Bengaluru", "Cyber City", "Sector 62"), or empty string.
 - "remote": true if remote or work-from-home is requested, false otherwise.
 - "query": Cleaned keywords for traditional database text match.
+- "notice_period": Candidate notice period or timeline if mentioned (e.g. "immediate", "15 days", "30 days", "60 days", "90 days", "serving notice"), or empty string if absent.
+- "urgency": Urgency level if detected ("immediate", "high", "normal", or empty string). E.g., "immediate joiner", "joining immediately", "urgent" -> "immediate".
 Output ONLY the JSON object. Do not include markdown formatting, code fences, or explanatory commentary.`;
+
+/**
+ * Standardizes skill synonyms and maps equivalent tech stacks.
+ * E.g., 'GenAI', 'LLM' -> Artificial Intelligence / Machine Learning
+ *       'Frontend' -> React / Web Development
+ *       'QA', 'Testing', 'Automation' -> Software Development Engineer in Test / QA
+ */
+export function normalizeSkillSynonyms(skills: string[]): string[] {
+  const result: string[] = [];
+  const added = new Set<string>();
+
+  for (const skill of skills) {
+    const s = skill.trim();
+    if (!s) continue;
+    const lower = s.toLowerCase();
+
+    if (!added.has(s)) {
+      result.push(s);
+      added.add(s);
+    }
+
+    // AI & Machine Learning synonyms
+    if (lower === 'genai' || lower === 'generative ai' || lower === 'llm' || lower === 'llms') {
+      const canonical = 'Artificial Intelligence / Machine Learning';
+      if (!added.has(canonical)) {
+        result.push(canonical);
+        added.add(canonical);
+      }
+    }
+
+    // Frontend synonyms
+    if (lower === 'frontend' || lower === 'front-end' || lower === 'front end') {
+      const canonical = 'React / Web Development';
+      if (!added.has(canonical)) {
+        result.push(canonical);
+        added.add(canonical);
+      }
+    }
+
+    // QA / SDET synonyms
+    if (lower === 'qa' || lower === 'testing' || lower === 'automation' || lower === 'test automation') {
+      const canonical = 'Software Development Engineer in Test / QA';
+      if (!added.has(canonical)) {
+        result.push(canonical);
+        added.add(canonical);
+      }
+    }
+  }
+
+  return result;
+}
 
 /**
  * Parses raw text from LLM into a validated NLSearchResult with fallback handling.
@@ -309,9 +373,21 @@ export function parseNLSearchResponse(rawText: string, fallbackQuery: string): N
 
   if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
     const obj = parsed as Record<string, unknown>;
-    const role = typeof obj.role === 'string' ? obj.role.trim() : '';
+    let role = typeof obj.role === 'string' ? obj.role.trim() : '';
     const location = typeof obj.location === 'string' ? obj.location.trim() : '';
     const remote = Boolean(obj.remote);
+    const notice_period = typeof obj.notice_period === 'string' ? obj.notice_period.trim() : '';
+    const urgency = typeof obj.urgency === 'string' ? obj.urgency.trim() : '';
+
+    // Map role synonyms if present
+    const roleLower = role.toLowerCase();
+    if (roleLower === 'frontend' || roleLower === 'front end' || roleLower === 'front-end') {
+      role = 'Frontend / Web Development';
+    } else if (roleLower === 'qa' || roleLower === 'tester' || roleLower === 'automation tester' || roleLower === 'sdet') {
+      role = 'Software Development Engineer in Test / QA';
+    } else if (roleLower === 'genai' || roleLower === 'llm' || roleLower === 'ai' || roleLower === 'generative ai') {
+      role = 'Artificial Intelligence / Machine Learning';
+    }
 
     let skills: string[] = [];
     if (Array.isArray(obj.skills)) {
@@ -319,6 +395,7 @@ export function parseNLSearchResponse(rawText: string, fallbackQuery: string): N
         .filter((s): s is string => typeof s === 'string')
         .map(s => s.trim())
         .filter(Boolean);
+      skills = normalizeSkillSynonyms(skills);
     }
 
     const query = typeof obj.query === 'string' && obj.query.trim().length > 0
@@ -331,16 +408,30 @@ export function parseNLSearchResponse(rawText: string, fallbackQuery: string): N
       location,
       remote,
       query,
+      ...(notice_period ? { notice_period } : {}),
+      ...(urgency ? { urgency } : {}),
     };
   }
 
-  // Safe fallback if JSON parsing completely fails
+  // Safe fallback if JSON parsing completely fails - extract simple notice period regex from fallback
+  let fallbackNotice: string | undefined;
+  let fallbackUrgency: string | undefined;
+  const noticeMatch = fallbackQuery.match(/\b(immediate(?:ly)?|15\s*days?|30\s*days?|60\s*days?|90\s*days?)\b/i);
+  if (noticeMatch) {
+    fallbackNotice = noticeMatch[1].toLowerCase();
+    if (fallbackNotice.includes('immediate')) {
+      fallbackUrgency = 'immediate';
+    }
+  }
+
   return {
     role: '',
     skills: [],
     location: '',
     remote: false,
     query: fallbackQuery.trim(),
+    ...(fallbackNotice ? { notice_period: fallbackNotice } : {}),
+    ...(fallbackUrgency ? { urgency: fallbackUrgency } : {}),
   };
 }
 
@@ -416,8 +507,9 @@ Rules:
 2. Clearly articulate the accomplishment [X], the measurable metric or business outcome [Y], and the technical methodology or action [Z].
 3. If the bullet point lacks quantifiable metrics, introduce plausible, realistic metrics (e.g., "by 35%", "reducing latency by 140ms", "scaling to 50K+ daily active users").
 4. Eliminate weak passive phrasing ("worked on", "responsible for", "helped with") and filler words.
-5. Keep the rewritten bullet concise, punchy, and between 18 and 40 words.
-6. Output ONLY the rewritten bullet point text. Do NOT include quotes, bullet markers (• or -), introductory remarks, or explanations.`;
+5. If targetRole or targetJob context is provided, align the technical phrasing, action verbs, and metrics directly to that domain (e.g. SDET: test coverage, flaky test reduction; Backend: latency, throughput, concurrency; Frontend: Core Web Vitals, load time).
+6. Keep the rewritten bullet concise, punchy, and between 18 and 40 words.
+7. Output ONLY the rewritten bullet point text. Do NOT include quotes, bullet markers (• or -), introductory remarks, or explanations.`;
 
 /**
  * Initiates an ATS bullet point rewrite with Server-Sent Events (SSE) streaming back to the client.
@@ -425,13 +517,24 @@ Rules:
 export async function streamATSBullet(
   input: string,
   modelOverride?: string,
-  clientSignal?: AbortSignal | null
+  clientSignal?: AbortSignal | null,
+  targetRole?: string,
+  targetJob?: string
 ): Promise<Response> {
   const baseUrl = getLiteLLMBaseUrl();
   const model = modelOverride?.trim() || getDefaultModel();
   const apiKey = getLiteLLMApiKey();
 
   const { controller, signal, cleanup } = createTimeoutSignal(UPSTREAM_TIMEOUT_MS, clientSignal);
+
+  const contextStr = [
+    targetRole ? `Target Role: ${targetRole}` : '',
+    targetJob ? `Target Job Details: ${targetJob}` : '',
+  ].filter(Boolean).join('\n');
+
+  const userPrompt = contextStr
+    ? `${contextStr}\n\nOriginal Bullet:\n${input.trim()}`
+    : input.trim();
 
   let upstreamResponse: globalThis.Response;
   try {
@@ -445,7 +548,7 @@ export async function streamATSBullet(
         model,
         messages: [
           { role: 'system', content: ATS_BULLET_SYSTEM_PROMPT },
-          { role: 'user', content: input.trim() },
+          { role: 'user', content: userPrompt },
         ],
         stream: true,
         max_tokens: 180,

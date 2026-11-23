@@ -15,6 +15,10 @@ import {
   Target,
   ArrowRight,
   Plus,
+  AlertTriangle,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface ResumeMatcherModalProps {
@@ -133,6 +137,7 @@ export const ResumeMatcherModal: React.FC<ResumeMatcherModalProps> = ({
   const [profile, setProfile] = useState<CandidateProfile | null>(activeProfile);
   const [threshold, setThreshold] = useState<number>(initialThreshold || 35);
   const [customSkillInput, setCustomSkillInput] = useState<string>('');
+  const [selectedJobId, setSelectedJobId] = useState<number | string | null>(null);
 
   // File upload state
   const [isParsing, setIsParsing] = useState<boolean>(false);
@@ -212,6 +217,16 @@ export const ResumeMatcherModal: React.FC<ResumeMatcherModalProps> = ({
   const previewMatches = useMemo(() => {
     return profile ? rankJobsByResume(jobs, profile, threshold) : [];
   }, [jobs, profile, threshold]);
+
+  // Keep selected job in sync with previewMatches
+  const activeSelectedJob = useMemo(() => {
+    if (!previewMatches.length) return null;
+    if (selectedJobId !== null) {
+      const found = previewMatches.find((m) => m.id === selectedJobId);
+      if (found) return found;
+    }
+    return previewMatches[0];
+  }, [previewMatches, selectedJobId]);
 
   const handleApply = () => {
     if (!profile) return;
@@ -472,7 +487,7 @@ export const ResumeMatcherModal: React.FC<ResumeMatcherModalProps> = ({
                   </div>
                 </div>
 
-                {/* Live Match Results Summary */}
+                {/* Live Match Results Summary & Gap Explainability */}
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-950 dark:bg-emerald-950/30">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -490,25 +505,126 @@ export const ResumeMatcherModal: React.FC<ResumeMatcherModalProps> = ({
 
                   {previewMatches.length > 0 && (
                     <div className="mt-3 flex flex-col gap-1.5 max-h-36 overflow-y-auto pr-1">
-                      {previewMatches.slice(0, 4).map((m) => (
-                        <div
-                          key={m.id}
-                          className="flex items-center justify-between rounded-lg bg-white/80 p-2 text-xs dark:bg-zinc-900/80"
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-zinc-900 dark:text-white line-clamp-1">
-                              {m.title}
+                      {previewMatches.slice(0, 5).map((m) => {
+                        const isSelected = activeSelectedJob?.id === m.id;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setSelectedJobId(m.id)}
+                            className={`flex items-center justify-between rounded-lg p-2 text-left text-xs transition ${
+                              isSelected
+                                ? 'bg-white ring-2 ring-emerald-500 shadow-sm dark:bg-zinc-800 dark:ring-emerald-400'
+                                : 'bg-white/80 hover:bg-white dark:bg-zinc-900/80 dark:hover:bg-zinc-900'
+                            }`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-zinc-900 dark:text-white line-clamp-1">
+                                {m.title}
+                              </span>
+                              <span className="text-[11px] text-zinc-500">{m.company} • {m.city}</span>
+                            </div>
+                            <span className="rounded bg-emerald-100 px-2 py-0.5 font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                              {m.matchResult?.matchScore}%
                             </span>
-                            <span className="text-[11px] text-zinc-500">{m.company} • {m.city}</span>
-                          </div>
-                          <span className="rounded bg-emerald-100 px-2 py-0.5 font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                            {m.matchResult?.matchScore}%
-                          </span>
-                        </div>
-                      ))}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
+
+                {/* Gap & Fit Explainability Radar for Selected Job */}
+                {activeSelectedJob && activeSelectedJob.matchResult && (
+                  <div className="rounded-xl border border-blue-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-800/40">
+                    <div className="flex items-center justify-between border-b border-zinc-100 pb-2 dark:border-zinc-800">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                          Gap & Fit Explainability: {activeSelectedJob.title}
+                        </span>
+                      </div>
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        {activeSelectedJob.matchResult.matchScore}% Match
+                      </span>
+                    </div>
+
+                    {/* Fit Drivers */}
+                    <div className="mt-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        Why This Role Matched
+                      </span>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {activeSelectedJob.matchResult.matchReasons?.map((reason, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                          >
+                            <CheckCircle2 className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                            <span>{reason}</span>
+                          </span>
+                        ))}
+                        {activeSelectedJob.matchResult.seniorityAlignment && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                            Seniority: {activeSelectedJob.matchResult.seniorityAlignment}
+                          </span>
+                        )}
+                        {activeSelectedJob.matchResult.verifiedSalaryRange && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                            Comp: {activeSelectedJob.matchResult.verifiedSalaryRange}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Matched Skills */}
+                    <div className="mt-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                        Verified Skills Overlap ({activeSelectedJob.matchResult.matchedSkills.length})
+                      </span>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {activeSelectedJob.matchResult.matchedSkills.length > 0 ? (
+                          activeSelectedJob.matchResult.matchedSkills.map((s) => (
+                            <span
+                              key={s}
+                              className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                            >
+                              ✓ {s}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[11px] text-zinc-400 italic">No direct skill overlaps.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Missing Skills / Stack Gaps */}
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>Missing Skills / Stack Gaps ({activeSelectedJob.matchResult.missingSkills.length})</span>
+                        </span>
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {activeSelectedJob.matchResult.missingSkills.length > 0 ? (
+                          activeSelectedJob.matchResult.missingSkills.map((s) => (
+                            <span
+                              key={s}
+                              className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300"
+                            >
+                              + {s}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                            Full stack coverage! No required skill gaps identified.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center p-8 text-center text-zinc-400">

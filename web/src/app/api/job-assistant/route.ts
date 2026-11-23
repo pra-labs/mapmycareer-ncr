@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { mode, input, query: queryParam, model } = body as Record<string, unknown>;
+    const { mode, input, text, query: queryParam, model, target_role, target_job } = body as Record<string, unknown>;
 
     // Validate mode
     if (mode !== 'nl_search' && mode !== 'ats_bullet') {
@@ -64,8 +64,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Accept either 'input' or 'query' parameter
-    const rawInput = typeof input === 'string' ? input : (typeof queryParam === 'string' ? queryParam : '');
+    // Accept 'input', 'text', or 'query' parameter
+    const rawInput = typeof input === 'string'
+      ? input
+      : (typeof text === 'string'
+        ? text
+        : (typeof queryParam === 'string' ? queryParam : ''));
 
     // Validate input presence and type
     if (rawInput.trim().length === 0) {
@@ -84,6 +88,8 @@ export async function POST(req: NextRequest) {
     }
 
     const modelOverride = typeof model === 'string' ? model : undefined;
+    const targetRole = typeof target_role === 'string' ? target_role : undefined;
+    const targetJob = typeof target_job === 'string' ? target_job : undefined;
 
     // 3. Execution by mode
     if (mode === 'nl_search') {
@@ -101,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     if (mode === 'ats_bullet') {
       try {
-        return await streamATSBullet(input, modelOverride, req.signal);
+        return await streamATSBullet(rawInput, modelOverride, req.signal, targetRole, targetJob);
       } catch (err: unknown) {
         console.error('[job-assistant] ats_bullet error:', err);
         return NextResponse.json(

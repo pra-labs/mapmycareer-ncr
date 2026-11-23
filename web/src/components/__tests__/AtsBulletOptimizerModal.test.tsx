@@ -81,5 +81,22 @@ describe('AtsBulletOptimizerModal Component', () => {
     });
 
     expect(screen.getByText('Copy')).toBeInTheDocument();
+    expect(screen.getByText('Compact')).toBeInTheDocument();
+  });
+
+  it('renders target role guidance, suggested action verbs, and quantification prompts', () => {
+    render(
+      <AtsBulletOptimizerModal
+        isOpen={true}
+        onClose={vi.fn()}
+        targetRole="Senior SDET"
+      />
+    );
+
+    expect(screen.getByText(/Targeted Alignment:/i)).toBeInTheDocument();
+    expect(screen.getByText('Senior SDET')).toBeInTheDocument();
+    expect(screen.getByText('Suggested Action Verbs')).toBeInTheDocument();
+    expect(screen.getByText('+ Automated')).toBeInTheDocument();
+    expect(screen.getByText(/By what % did test execution time drop\?/i)).toBeInTheDocument();
   });
 });

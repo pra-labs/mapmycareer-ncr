@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Job, JobMatchResult } from '../types/job';
-import { getCleanLogoUrl } from '../lib/filterUtils';
+import { getCleanLogoUrl, getJobNoticePeriod } from '../lib/filterUtils';
 import { trackEvent } from '../lib/analytics';
-import { MapPin, Building2, Briefcase, IndianRupee, ExternalLink, Bookmark, Target } from 'lucide-react';
+import { MapPin, Building2, Briefcase, IndianRupee, ExternalLink, Bookmark, Target, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface JobCardProps {
   job: Job;
@@ -16,6 +16,9 @@ interface JobCardProps {
 
 export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isSaved, matchResult, onSelect, onHover, onToggleSave }) => {
   const [imgError, setImgError] = useState(false);
+  const [isSkillsExpanded, setIsSkillsExpanded] = useState(false);
+
+  const notice = getJobNoticePeriod(job);
 
   const getBadgeColor = (level?: string) => {
     switch (level?.toLowerCase()) {
@@ -94,6 +97,18 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isSaved, matc
                   {job.experience_level}
                 </span>
               )}
+              {/* Notice Period / Joiner Urgency Badge */}
+              <span
+                className={`flex items-center gap-1 shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${
+                  notice.isUrgent
+                    ? 'bg-amber-50 text-amber-700 ring-amber-500/30 dark:bg-amber-950/50 dark:text-amber-300'
+                    : 'bg-zinc-50 text-zinc-600 ring-zinc-500/20 dark:bg-zinc-800 dark:text-zinc-400'
+                }`}
+                title={`Notice Period: ${notice.label}`}
+              >
+                <Clock className="h-2.5 w-2.5" />
+                <span>{notice.label}</span>
+              </span>
             </div>
             {onToggleSave && (
               <button
@@ -134,7 +149,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isSaved, matc
 
         {job.skills && job.skills.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-1">
-            {job.skills.slice(0, 3).map((skill, idx) => {
+            {(isSkillsExpanded ? job.skills : job.skills.slice(0, 3)).map((skill, idx) => {
               const isMatched = matchResult?.matchedSkills.some(
                 (ms) => ms.toLowerCase() === skill.toLowerCase()
               );
@@ -152,12 +167,19 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isSaved, matc
               );
             })}
             {job.skills.length > 3 && (
-              <span
-                className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
-                title={job.skills.slice(3).join(', ')}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSkillsExpanded((prev) => !prev);
+                }}
+                className="flex items-center gap-0.5 rounded-md bg-zinc-100 hover:bg-zinc-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition"
+                title={isSkillsExpanded ? 'Collapse skills' : `Click to see all: ${job.skills.slice(3).join(', ')}`}
+                aria-label={isSkillsExpanded ? 'Collapse skill tags' : `Expand ${job.skills.length - 3} more skills`}
               >
-                +{job.skills.length - 3} more
-              </span>
+                <span>{isSkillsExpanded ? 'show less' : `+${job.skills.length - 3} more`}</span>
+                {isSkillsExpanded ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
+              </button>
             )}
           </div>
         )}

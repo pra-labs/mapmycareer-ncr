@@ -51,7 +51,10 @@ export interface Job {
   level_yoe_range?: string;
   levels_fyi_benchmark?: string;
   levels_fyi_url?: string;
+  notice_period?: string;
 }
+
+export type NoticePeriodFilter = 'Any' | 'Immediate / <= 30 Days' | '30-60 Days' | '> 60 Days';
 
 export interface FilterState {
   searchQuery: string;
@@ -61,6 +64,7 @@ export interface FilterState {
   workplaceModels: string[];
   minSalaryLPA: number;
   selectedSkills: string[];
+  noticePeriod?: NoticePeriodFilter | string;
   showSavedOnly?: boolean;
 }
 
@@ -85,6 +89,9 @@ export interface JobMatchResult {
   experienceScore: number;     // 0 to 100
   matchedSkills: string[];
   missingSkills: string[];
+  seniorityAlignment?: 'Exact Match' | 'Close Match' | 'Gap';
+  verifiedSalaryRange?: string;
+  matchReasons?: string[];
 }
 
 export interface MatchedJob extends Job {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Job, JobMatchResult } from '../types/job';
+import { getJobNoticePeriod } from '../lib/filterUtils';
 import {
   X,
   Building2,
@@ -20,6 +21,7 @@ import {
   Car,
   Wind,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 import { fetchWeatherAndAqi, WeatherAqiData } from '../lib/weatherService';
 import {
@@ -210,22 +212,36 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-zinc-50 p-3.5 dark:bg-zinc-800/50">
+        <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-xl bg-zinc-50 p-3.5 dark:bg-zinc-800/50">
           <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
-            <MapPin className="h-4 w-4 text-rose-500" />
-            <span>{job.hub || job.city}</span>
+            <MapPin className="h-4 w-4 text-rose-500 shrink-0" />
+            <span className="truncate">{job.hub || job.city}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
-            <IndianRupee className="h-4 w-4 text-emerald-500" />
-            <span>{job.salary_range || 'Competitive'}</span>
+            <IndianRupee className="h-4 w-4 text-emerald-500 shrink-0" />
+            <span className="truncate">{job.salary_range || 'Competitive'}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
-            <Briefcase className="h-4 w-4 text-blue-500" />
-            <span>{job.workplace_model} · {job.job_type || 'Full-time'}</span>
+            <Briefcase className="h-4 w-4 text-blue-500 shrink-0" />
+            <span className="truncate">{job.workplace_model} · {job.job_type || 'Full-time'}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
-            <CheckCircle2 className="h-4 w-4 text-purple-500" />
-            <span>{job.experience_yoe || job.experience_level}</span>
+            <CheckCircle2 className="h-4 w-4 text-purple-500 shrink-0" />
+            <span className="truncate">{job.experience_yoe || job.experience_level || 'Experience open'}</span>
+          </div>
+          {/* Notice Period / Urgency in Quick Details */}
+          <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300 sm:col-span-2">
+            <Clock className={`h-4 w-4 shrink-0 ${getJobNoticePeriod(job).isUrgent ? 'text-amber-500' : 'text-zinc-400'}`} />
+            <span className="flex items-center gap-1.5">
+              <span>Notice Period:</span>
+              <span className={`font-semibold rounded px-1.5 py-0.5 text-[11px] ${
+                getJobNoticePeriod(job).isUrgent
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                  : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300'
+              }`}>
+                {getJobNoticePeriod(job).label}
+              </span>
+            </span>
           </div>
         </div>
 

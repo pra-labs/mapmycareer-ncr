@@ -340,6 +340,32 @@ Hope this helps!`;
       expect(parsed.remote).toBe(false);
       expect(parsed.query).toBe('mlops engineer');
     });
+
+    it('extracts notice period and urgency signals and maps skill synonyms', () => {
+      const raw = JSON.stringify({
+        role: 'QA',
+        skills: ['GenAI', 'LLM', 'Frontend', 'Testing'],
+        location: 'Bengaluru',
+        remote: false,
+        notice_period: '30 days',
+        urgency: 'high',
+        query: 'QA GenAI LLM 30 days',
+      });
+
+      const parsed = parseNLSearchResponse(raw, 'fallback');
+      expect(parsed.role).toBe('Software Development Engineer in Test / QA');
+      expect(parsed.skills).toContain('Artificial Intelligence / Machine Learning');
+      expect(parsed.skills).toContain('React / Web Development');
+      expect(parsed.skills).toContain('Software Development Engineer in Test / QA');
+      expect(parsed.notice_period).toBe('30 days');
+      expect(parsed.urgency).toBe('high');
+    });
+
+    it('extracts immediate notice period from fallback query when unparseable', () => {
+      const parsed = parseNLSearchResponse('broken json', 'Looking for immediate joiner React dev');
+      expect(parsed.notice_period).toBe('immediate');
+      expect(parsed.urgency).toBe('immediate');
+    });
   });
 
   describe('processNLSearch', () => {

@@ -188,6 +188,8 @@ export const CorridorFaqModal: React.FC<CorridorFaqModalProps> = ({ isOpen, onCl
                     href="https://github.com/pra-labs"
                     target="_blank"
                     rel="noopener noreferrer"
+                    title="Visit PraLabs GitHub"
+                    aria-label="Visit PraLabs GitHub"
                     className="flex items-center gap-1 font-semibold text-blue-600 hover:underline dark:text-blue-400"
                   >
                     GitHub ↗
@@ -196,6 +198,8 @@ export const CorridorFaqModal: React.FC<CorridorFaqModalProps> = ({ isOpen, onCl
                     href="https://www.linkedin.com/company/pra-labs"
                     target="_blank"
                     rel="noopener noreferrer"
+                    title="Visit PraLabs LinkedIn"
+                    aria-label="Visit PraLabs LinkedIn"
                     className="flex items-center gap-1 font-semibold text-[#0A66C2] hover:underline"
                   >
                     LinkedIn ↗

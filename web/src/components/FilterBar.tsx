@@ -1,6 +1,6 @@
-import React from 'react';
-import { FilterState } from '../types/job';
-import { Search, SlidersHorizontal, IndianRupee, RotateCcw, MapPin, Loader2, X, Sparkles } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { FilterState, NoticePeriodFilter } from '../types/job';
+import { Search, SlidersHorizontal, IndianRupee, RotateCcw, MapPin, Loader2, X, Sparkles, Clock } from 'lucide-react';
 import { lookupPincode, PincodeInfo } from '../lib/pincodeService';
 import { trackEvent } from '../lib/analytics';
 
@@ -9,6 +9,7 @@ interface FilterBarProps {
   onFilterChange: (newFilters: FilterState) => void;
   cities: string[];
   hubs: string[];
+  cityHubMap?: Record<string, string[]>;
   onReset: () => void;
 }
 
@@ -17,10 +18,23 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onFilterChange,
   cities,
   hubs,
+  cityHubMap,
   onReset,
 }) => {
   const [localSearch, setLocalSearch] = React.useState(filters.searchQuery);
   const [isMobileExpanded, setIsMobileExpanded] = React.useState(false);
+
+  // Dynamic hub list: when a city is selected, show only hubs belonging to that city
+  const visibleHubs = useMemo(() => {
+    if (!filters.selectedCity || filters.selectedCity === 'All Cities') {
+      return hubs;
+    }
+    if (cityHubMap && cityHubMap[filters.selectedCity]) {
+      return cityHubMap[filters.selectedCity];
+    }
+    // Fallback: if cityHubMap wasn't passed, return all hubs
+    return hubs;
+  }, [filters.selectedCity, hubs, cityHubMap]);
 
   // PIN Code Auto-Search & Geocoding State
   const [detectedPinInfo, setDetectedPinInfo] = React.useState<PincodeInfo | null>(null);
@@ -236,6 +250,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
   const experienceOptions = ['Entry', 'Mid', 'Senior', 'Lead'];
   const workplaceOptions = ['Remote', 'Hybrid', 'On-site'];
+  const noticeOptions: NoticePeriodFilter[] = ['Any', 'Immediate / <= 30 Days', '30-60 Days', '> 60 Days'];
 
   const toggleExperience = (exp: string) => {
     const exists = filters.experienceLevels.includes(exp);
@@ -253,12 +268,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     onFilterChange({ ...filters, workplaceModels: updated });
   };
 
+  const handleNoticeChange = (np: NoticePeriodFilter) => {
+    onFilterChange({ ...filters, noticePeriod: np === filters.noticePeriod ? 'Any' : np });
+  };
+
   const activeFiltersCount =
     (filters.selectedCity !== 'All Cities' ? 1 : 0) +
     (filters.selectedHub !== 'All Hubs' ? 1 : 0) +
     filters.experienceLevels.length +
     filters.workplaceModels.length +
     (filters.minSalaryLPA > 0 ? 1 : 0) +
+    (filters.noticePeriod && filters.noticePeriod !== 'Any' ? 1 : 0) +
     (filters.showSavedOnly ? 1 : 0);
 
   return (
@@ -356,8 +376,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             onChange={(e) => onFilterChange({ ...filters, selectedHub: e.target.value })}
             className="w-full truncate rounded-lg border border-zinc-200 bg-zinc-50/50 py-2 px-2.5 text-xs font-medium text-zinc-900 outline-none transition focus:border-blue-500 focus:bg-white dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           >
-            <option value="All Hubs">All Tech Hubs / Zones</option>
-            {hubs.map((hub) => (
+            <option value="All Hubs">
+              {filters.selectedCity !== 'All Cities' ? `All ${filters.selectedCity} Hubs` : 'All Tech Hubs / Zones'}
+            </option>
+            {visibleHubs.map((hub) => (
               <option key={hub} value={hub} className="dark:bg-zinc-800 dark:text-zinc-100">
                 {hub}
               </option>
@@ -473,6 +495,32 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 }`}
               >
                 {wp}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Notice Period / Joiner Urgency Pills */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+            <Clock className="h-3 w-3 text-amber-500" />
+            <span>Notice:</span>
+          </span>
+          {noticeOptions.map((np) => {
+            const active = (filters.noticePeriod || 'Any') === np;
+            return (
+              <button
+                key={np}
+                onClick={() => handleNoticeChange(np)}
+                className={`rounded-md px-2.5 py-1.5 min-h-[36px] text-xs font-medium transition ${
+                  active && np !== 'Any'
+                    ? 'bg-amber-600 text-white shadow-sm shadow-amber-500/20 dark:bg-amber-500 dark:text-zinc-950 font-semibold'
+                    : active && np === 'Any'
+                    ? 'bg-zinc-200 text-zinc-800 font-semibold dark:bg-zinc-700 dark:text-zinc-100'
+                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
+                }`}
+              >
+                {np === 'Immediate / <= 30 Days' ? 'Immediate / ≤30d' : np}
               </button>
             );
           })}

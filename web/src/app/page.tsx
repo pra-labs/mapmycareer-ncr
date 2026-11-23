@@ -77,6 +77,7 @@ export default function Home() {
     workplaceModels: [],
     minSalaryLPA: 0,
     selectedSkills: [],
+    noticePeriod: 'Any',
     showSavedOnly: false,
   });
 
@@ -95,6 +96,7 @@ export default function Home() {
         experience_levels: filters.experienceLevels.length > 0 ? filters.experienceLevels.join(',') : undefined,
         workplace_models: filters.workplaceModels.length > 0 ? filters.workplaceModels.join(',') : undefined,
         min_salary_lpa: filters.minSalaryLPA > 0 ? filters.minSalaryLPA : undefined,
+        notice_period: filters.noticePeriod && filters.noticePeriod !== 'Any' ? filters.noticePeriod : undefined,
       });
     }, 600);
 
@@ -144,7 +146,7 @@ export default function Home() {
     loadJobs();
   }, []);
 
-  const { cities, hubs } = useMemo(() => extractUniqueValues(allJobs), [allJobs]);
+  const { cities, hubs, cityHubMap } = useMemo(() => extractUniqueValues(allJobs), [allJobs]);
 
   const deferredFilters = useDeferredValue(filters);
 
@@ -213,6 +215,8 @@ export default function Home() {
       workplaceModels: [],
       minSalaryLPA: 0,
       selectedSkills: [],
+      noticePeriod: 'Any',
+      showSavedOnly: false,
     });
   };
 
@@ -350,6 +354,7 @@ export default function Home() {
             onFilterChange={setFilters}
             cities={cities}
             hubs={hubs}
+            cityHubMap={cityHubMap}
             onReset={handleResetFilters}
           />
         </div>

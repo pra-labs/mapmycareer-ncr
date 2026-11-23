@@ -164,6 +164,8 @@ export const CorridorFaqSection: React.FC = () => {
                     href="https://github.com/pra-labs"
                     target="_blank"
                     rel="noopener noreferrer"
+                    title="Visit PraLabs GitHub"
+                    aria-label="Visit PraLabs GitHub"
                     className="font-medium text-blue-600 hover:underline dark:text-blue-400"
                   >
                     GitHub
@@ -173,6 +175,8 @@ export const CorridorFaqSection: React.FC = () => {
                     href="https://www.linkedin.com/company/pra-labs"
                     target="_blank"
                     rel="noopener noreferrer"
+                    title="Visit PraLabs LinkedIn"
+                    aria-label="Visit PraLabs LinkedIn"
                     className="font-medium text-blue-600 hover:underline dark:text-blue-400"
                   >
                     LinkedIn

@@ -393,6 +393,38 @@ export function scoreJobMatch(job: Job, profile: CandidateProfile): JobMatchResu
     Math.round(skillsScore * 0.60 + titleScore * 0.25 + experienceScore * 0.15)
   );
 
+  // Explainability: Seniority alignment determination
+  let seniorityAlignment: 'Exact Match' | 'Close Match' | 'Gap' = 'Gap';
+  if (experienceScore === 100) {
+    seniorityAlignment = 'Exact Match';
+  } else if (experienceScore >= 70) {
+    seniorityAlignment = 'Close Match';
+  }
+
+  // Verified Salary Range
+  const verifiedSalaryRange = job.salary_range || (
+    job.salary_min_lpa && job.salary_max_lpa
+      ? `₹${job.salary_min_lpa} - ₹${job.salary_max_lpa} LPA`
+      : undefined
+  );
+
+  // Match reasons explainability list
+  const matchReasons: string[] = [];
+  if (matchedSkills.length > 0) {
+    matchReasons.push(`${matchedSkills.length} of ${jobSkills.length || matchedSkills.length} core skills verified`);
+  }
+  if (seniorityAlignment === 'Exact Match') {
+    matchReasons.push(`Direct ${job.experience_level || 'standard'} seniority fit`);
+  } else if (seniorityAlignment === 'Close Match') {
+    matchReasons.push(`Adjacent seniority alignment (${profile.seniority} → ${job.experience_level || 'Mid'})`);
+  }
+  if (verifiedSalaryRange) {
+    matchReasons.push(`Verified market compensation: ${verifiedSalaryRange}`);
+  }
+  if (job.city) {
+    matchReasons.push(`Target hub location: ${job.city}${job.hub ? ` (${job.hub})` : ''}`);
+  }
+
   return {
     jobId: job.id,
     matchScore: compositeScore,
@@ -401,6 +433,9 @@ export function scoreJobMatch(job: Job, profile: CandidateProfile): JobMatchResu
     experienceScore,
     matchedSkills,
     missingSkills,
+    seniorityAlignment,
+    verifiedSalaryRange,
+    matchReasons,
   };
 }
 

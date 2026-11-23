@@ -83,4 +83,22 @@ describe('ResumeMatcherModal Component', () => {
     expect(onApply).toHaveBeenCalledTimes(1);
     expect(onApply.mock.calls[0][0].skills.length).toBeGreaterThan(0);
   });
+
+  it('renders Gap & Fit Explainability with missing skills and seniority alignment', () => {
+    render(
+      <ResumeMatcherModal
+        isOpen={true}
+        onClose={vi.fn()}
+        jobs={mockJobs}
+        activeProfile={null}
+        minThreshold={20}
+        onApplyProfile={vi.fn()}
+        onClearProfile={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/Gap & Fit Explainability/i)).toBeInTheDocument();
+    expect(screen.getByText(/Why This Role Matched/i)).toBeInTheDocument();
+    expect(screen.getByText(/Missing Skills \/ Stack Gaps/i)).toBeInTheDocument();
+  });
 });
