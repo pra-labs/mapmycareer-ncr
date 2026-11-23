@@ -106,8 +106,8 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           {isToolsOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-64 rounded-xl border border-zinc-200 bg-white p-2 shadow-xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900 z-50 animate-in fade-in slide-in-from-top-1">
-              <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+            <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-1.5rem)] rounded-xl border border-zinc-200/90 bg-white/95 p-2 shadow-2xl backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95 z-50 animate-in fade-in slide-in-from-top-1.5">
+              <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 CareerForge Suite
               </div>
               <div className="space-y-0.5">
@@ -117,12 +117,12 @@ export const Header: React.FC<HeaderProps> = ({
                       triggerFaq();
                       setIsToolsOpen(false);
                     }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-amber-800 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/40 text-left transition"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-amber-900 hover:bg-amber-50/90 dark:text-amber-300 dark:hover:bg-amber-950/40 text-left transition"
                   >
                     <BookOpen className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                     <div>
-                      <div className="font-semibold">Corridor Insights & FAQ</div>
-                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Salary benchmarks & hubs</div>
+                      <div className="font-semibold text-zinc-900 dark:text-zinc-100">Corridor Insights & FAQ</div>
+                      <div className="text-[10px] text-zinc-600 dark:text-zinc-400">Salary benchmarks & hubs</div>
                     </div>
                   </button>
                 )}
@@ -131,12 +131,12 @@ export const Header: React.FC<HeaderProps> = ({
                     onOpenAtsAuditor?.();
                     setIsToolsOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-blue-800 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950/40 text-left transition"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-blue-900 hover:bg-blue-50/90 dark:text-blue-300 dark:hover:bg-blue-950/40 text-left transition"
                 >
                   <Zap className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
                   <div>
-                    <div className="font-semibold">ATS Auditor</div>
-                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400">100-pt Google XYZ audit</div>
+                    <div className="font-semibold text-zinc-900 dark:text-zinc-100">ATS Auditor</div>
+                    <div className="text-[10px] text-zinc-600 dark:text-zinc-400">100-pt Google XYZ audit</div>
                   </div>
                 </button>
                 {onOpenAtsBulletOptimizer && (
@@ -145,15 +145,15 @@ export const Header: React.FC<HeaderProps> = ({
                       onOpenAtsBulletOptimizer();
                       setIsToolsOpen(false);
                     }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-violet-800 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-950/40 text-left transition"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-violet-900 hover:bg-violet-50/90 dark:text-violet-300 dark:hover:bg-violet-950/40 text-left transition"
                   >
                     <Sparkles className="h-4 w-4 text-violet-600 dark:text-violet-400 shrink-0" />
                     <div>
-                      <div className="font-semibold flex items-center gap-1.5">
+                      <div className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
                         <span>AI Bullet Optimizer</span>
-                        <span className="rounded bg-violet-100 px-1 py-0.2 text-[9px] font-bold text-violet-700 dark:bg-violet-900/60 dark:text-violet-300">Edge AI</span>
+                        <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold text-violet-800 dark:bg-violet-900/60 dark:text-violet-300">Edge AI</span>
                       </div>
-                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Real-time XYZ metric polish</div>
+                      <div className="text-[10px] text-zinc-600 dark:text-zinc-400">Real-time XYZ metric polish</div>
                     </div>
                   </button>
                 )}
@@ -162,12 +162,12 @@ export const Header: React.FC<HeaderProps> = ({
                     onOpenResumeBuilder?.();
                     setIsToolsOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-emerald-800 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40 text-left transition"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-emerald-900 hover:bg-emerald-50/90 dark:text-emerald-300 dark:hover:bg-emerald-950/40 text-left transition"
                 >
                   <FileCode2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <div>
-                    <div className="font-semibold">Resume Builder</div>
-                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400">ATS LaTeX resume engine</div>
+                    <div className="font-semibold text-zinc-900 dark:text-zinc-100">Resume Builder</div>
+                    <div className="text-[10px] text-zinc-600 dark:text-zinc-400">ATS LaTeX resume engine</div>
                   </div>
                 </button>
                 <button
@@ -175,12 +175,12 @@ export const Header: React.FC<HeaderProps> = ({
                     onOpenRecruiterValidator?.();
                     setIsToolsOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-purple-800 hover:bg-purple-50 dark:text-purple-300 dark:hover:bg-purple-950/40 text-left transition"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-purple-900 hover:bg-purple-50/90 dark:text-purple-300 dark:hover:bg-purple-950/40 text-left transition"
                 >
                   <MailCheck className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
                   <div>
-                    <div className="font-semibold">Recruiter Radar</div>
-                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Anti-bounce email validator</div>
+                    <div className="font-semibold text-zinc-900 dark:text-zinc-100">Recruiter Radar</div>
+                    <div className="text-[10px] text-zinc-600 dark:text-zinc-400">Anti-bounce email validator</div>
                   </div>
                 </button>
                 <button
@@ -188,19 +188,19 @@ export const Header: React.FC<HeaderProps> = ({
                     onOpenDevProfileAuditor?.();
                     setIsToolsOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-indigo-800 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950/40 text-left transition"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-indigo-900 hover:bg-indigo-50/90 dark:text-indigo-300 dark:hover:bg-indigo-950/40 text-left transition"
                 >
                   <Award className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
                   <div>
-                    <div className="font-semibold">Dev Profile & Proof of Work</div>
-                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400">GitHub auditor & notice calculator</div>
+                    <div className="font-semibold text-zinc-900 dark:text-zinc-100">Dev Profile & Proof of Work</div>
+                    <div className="text-[10px] text-zinc-600 dark:text-zinc-400">GitHub auditor & notice calculator</div>
                   </div>
                 </button>
               </div>
 
               {/* Social profile links */}
               <div className="mt-2 border-t border-zinc-100 pt-2 px-2.5 flex items-center justify-between dark:border-zinc-800">
-                <span className="text-[11px] text-zinc-500">Connect with author</span>
+                <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Connect with author</span>
                 <div className="flex items-center gap-1.5">
                   <a
                     href="https://github.com/pra-labs"

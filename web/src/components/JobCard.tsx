@@ -99,10 +99,10 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isSaved, matc
               )}
               {/* Notice Period / Joiner Urgency Badge */}
               <span
-                className={`flex items-center gap-1 shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${
+                className={`flex items-center gap-1 shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold ring-1 ring-inset ${
                   notice.isUrgent
-                    ? 'bg-amber-50 text-amber-700 ring-amber-500/30 dark:bg-amber-950/50 dark:text-amber-300'
-                    : 'bg-zinc-50 text-zinc-600 ring-zinc-500/20 dark:bg-zinc-800 dark:text-zinc-400'
+                    ? 'bg-amber-100/80 text-amber-900 ring-amber-500/40 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-500/40'
+                    : 'bg-zinc-100 text-zinc-700 ring-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-700'
                 }`}
                 title={`Notice Period: ${notice.label}`}
               >
@@ -126,29 +126,29 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isSaved, matc
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-3 text-xs text-zinc-500 dark:text-zinc-400">
+        <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-3 text-xs text-zinc-600 dark:text-zinc-400">
           <div className="flex items-center gap-1" title={job.location || job.hub || job.city}>
             <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-            <span className="line-clamp-1">
+            <span className="line-clamp-1 font-medium text-zinc-700 dark:text-zinc-300">
               {job.hub ? `${job.hub}, ${job.city}` : (job.city || job.location || 'India')}
             </span>
           </div>
           {job.salary_range && (
-            <div className="flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300">
-              <IndianRupee className="h-3.5 w-3.5 text-emerald-500" />
+            <div className="flex items-center gap-1 font-bold text-zinc-800 dark:text-zinc-200">
+              <IndianRupee className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>{job.salary_range}</span>
             </div>
           )}
           {job.workplace_model && (
-            <div className="flex items-center gap-1">
-              <Briefcase className="h-3.5 w-3.5 text-blue-500" />
+            <div className="flex items-center gap-1 font-medium text-zinc-700 dark:text-zinc-300">
+              <Briefcase className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
               <span>{job.workplace_model}</span>
             </div>
           )}
         </div>
 
         {job.skills && job.skills.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center gap-1">
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
             {(isSkillsExpanded ? job.skills : job.skills.slice(0, 3)).map((skill, idx) => {
               const isMatched = matchResult?.matchedSkills.some(
                 (ms) => ms.toLowerCase() === skill.toLowerCase()
@@ -156,10 +156,10 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isSaved, matc
               return (
                 <span
                   key={idx}
-                  className={`rounded-md px-2 py-0.5 text-[11px] font-medium transition ${
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-semibold transition border ${
                     isMatched
-                      ? 'bg-emerald-100 font-semibold text-emerald-800 ring-1 ring-emerald-500/30 dark:bg-emerald-950/80 dark:text-emerald-300'
-                      : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'
+                      ? 'bg-emerald-50 text-emerald-900 border-emerald-300 ring-1 ring-emerald-500/30 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700'
+                      : 'bg-zinc-100/90 text-zinc-800 border-zinc-200/90 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
                   }`}
                 >
                   {isMatched && '✓ '}{skill}
@@ -173,7 +173,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isSaved, matc
                   e.stopPropagation();
                   setIsSkillsExpanded((prev) => !prev);
                 }}
-                className="flex items-center gap-0.5 rounded-md bg-zinc-100 hover:bg-zinc-200 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition"
+                className="flex items-center gap-0.5 rounded-md border border-zinc-200 bg-zinc-100 hover:bg-zinc-200 px-2 py-0.5 text-[10px] font-bold text-zinc-700 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white transition shadow-2xs"
                 title={isSkillsExpanded ? 'Collapse skills' : `Click to see all: ${job.skills.slice(3).join(', ')}`}
                 aria-label={isSkillsExpanded ? 'Collapse skill tags' : `Expand ${job.skills.length - 3} more skills`}
               >

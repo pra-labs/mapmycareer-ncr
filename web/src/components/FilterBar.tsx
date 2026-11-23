@@ -308,18 +308,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               type="button"
               onClick={handleAiSearch}
               disabled={isAiSearching || !localSearch.trim()}
-              className={`flex h-7 items-center gap-1 px-2 rounded-md border text-[11px] font-semibold transition ${
+              className={`flex h-7 items-center gap-1.5 px-2.5 rounded-md border text-[11px] font-bold transition-all shadow-xs ${
                 localSearch.trim()
-                  ? 'border-violet-300 bg-gradient-to-r from-violet-50 to-indigo-50 text-violet-700 hover:from-violet-100 hover:to-indigo-100 dark:border-violet-800/80 dark:bg-gradient-to-r dark:from-violet-950/60 dark:to-indigo-950/60 dark:text-violet-300 dark:hover:from-violet-900/80 dark:hover:to-indigo-900/80 shadow-xs'
-                  : 'border-zinc-200 bg-zinc-100/70 text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500 cursor-not-allowed opacity-60'
+                  ? 'border-violet-400 bg-gradient-to-r from-violet-100 via-indigo-50 to-violet-100 text-violet-900 hover:from-violet-200 hover:to-indigo-100 hover:border-violet-500 hover:shadow-sm active:scale-95 dark:border-violet-700 dark:bg-gradient-to-r dark:from-violet-950/80 dark:to-indigo-950/80 dark:text-violet-200 dark:hover:from-violet-900 dark:hover:to-indigo-900'
+                  : 'border-zinc-200 bg-zinc-100/80 text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500 cursor-not-allowed opacity-60'
               }`}
               title="AI Search: Extract role, location, remote, and experience filters"
               aria-label="AI Search"
             >
               {isAiSearching ? (
-                <Loader2 className="h-3 w-3 animate-spin text-violet-600 dark:text-violet-400" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-violet-700 dark:text-violet-300" />
               ) : (
-                <Sparkles className="h-3 w-3 text-violet-600 dark:text-violet-400" />
+                <Sparkles className="h-3.5 w-3.5 text-violet-700 dark:text-violet-300 fill-violet-200/50" />
               )}
               <span className="hidden min-[420px]:inline">
                 {isAiSearching ? 'Expanding...' : 'AI Search'}
